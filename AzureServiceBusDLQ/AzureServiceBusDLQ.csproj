@@ -6,6 +6,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>AzureServiceBusDLQ</RootNamespace>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>asb-dlq</ToolCommandName>
+        <PackageOutputPath>./nupkg</PackageOutputPath>
     </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Messaging.ServiceBus"/>
+    </ItemGroup>
 
 </Project>
