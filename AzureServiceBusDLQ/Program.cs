@@ -1,22 +1,22 @@
 ﻿using Azure.Messaging.ServiceBus.Administration;
-using Spectre.Console;
+using Microsoft.Extensions.DependencyInjection;
+using Spectre.Console.Cli;
 
-//TODO: Use cmd line arg
 var connectionString = Environment.GetEnvironmentVariable("AzureServiceBus_ConnectionString");
-
 var adminClient = new ServiceBusAdministrationClient(connectionString);
 
-var table = new Table
+var serviceCollection = new ServiceCollection();
+
+serviceCollection.AddSingleton(adminClient);
+
+// Create a type registrar and register any dependencies.
+// A type registrar is an adapter for a DI framework.
+var registrar = new TypeRegistrar(serviceCollection);
+
+var app = new CommandApp(registrar);
+app.Configure(config =>
 {
-    Title = new TableTitle("DLQ Status")
-};
+    config.AddCommand<StatusCommand>("status");
+});
 
-table.AddColumn("Queue");
-table.AddColumn(new TableColumn("Count").Centered());
-
-await foreach (var queue in adminClient.GetQueuesAsync())
-{
-    table.AddRow(queue.Name, "1");
-}
-
-AnsiConsole.Write(table);
+await app.RunAsync(args);
