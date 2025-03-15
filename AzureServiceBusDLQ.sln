@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureServiceBusDLQ.Tool", "AzureServiceBusDLQ.Tool\AzureServiceBusDLQ.Tool.csproj", "{F3105250-5AF1-45B2-ADEC-9BA34C3D3EA4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureServiceBusDLQ", "AzureServiceBusDLQ\AzureServiceBusDLQ.csproj", "{F3105250-5AF1-45B2-ADEC-9BA34C3D3EA4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
