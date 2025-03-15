@@ -13,6 +13,8 @@
 
     <ItemGroup>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
+        <PackageReference Include="Spectre.Console" />
+        <PackageReference Include="Spectre.Console.Cli" />
     </ItemGroup>
 
 </Project>
