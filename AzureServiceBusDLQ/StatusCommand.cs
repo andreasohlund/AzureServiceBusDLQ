@@ -30,11 +30,33 @@ public class StatusCommand : CancellableAsyncCommand<StatusCommand.Settings>
         table.AddColumn("Queue");
         table.AddColumn(new TableColumn("Count").Centered());
 
+        var queues = new List<QueueProperties>();
+
+        //TODO: Spinner
         await foreach (var queue in settings.AdministrationClient.GetQueuesAsync(cancellationToken))
         {
-            var response = await settings.AdministrationClient.GetQueueRuntimePropertiesAsync(queue.Name, cancellationToken);
-            table.AddRow(queue.Name, response.Value.DeadLetterMessageCount.ToString());
+            queues.Add(queue);
         }
+
+        await AnsiConsole.Progress()
+            .Columns(new TaskDescriptionColumn(), new ProgressBarColumn(), new PercentageColumn(), new RemainingTimeColumn(), new SpinnerColumn())
+            .StartAsync(async ctx =>
+            {
+                var task = ctx.AddTask($"Fetching DLQ status for {queues.Count} queues", new ProgressTaskSettings());
+
+                task.MaxValue = queues.Count;
+                await Task.WhenAll(queues.Select(async queue =>
+                {
+                    var response = await settings.AdministrationClient.GetQueueRuntimePropertiesAsync(queue.Name, cancellationToken);
+                    if (!response.HasValue)
+                    {
+                        throw new InvalidOperationException($"Failed to get queue runtime properties for {queue.Name}");
+                    }
+
+                    task.Increment(1);
+                    table.AddRow(queue.Name, response.Value.DeadLetterMessageCount.ToString());
+                }));
+            });
 
         AnsiConsole.Write(table);
 
