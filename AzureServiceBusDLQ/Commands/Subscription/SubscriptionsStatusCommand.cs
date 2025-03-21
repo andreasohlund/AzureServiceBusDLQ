@@ -4,23 +4,13 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class StatusCommand : CancellableAsyncCommand<StatusCommand.Settings>
+public class SubscriptionsStatusCommand : CancellableAsyncCommand<SubscriptionsStatusCommand.Settings>
 {
-    public class Settings : CommandSettings
+    public class Settings : BaseSettings
     {
-        [Description("Service bus namespace")]
-        [CommandOption("-n|--namespace")]
-        public string? Namespace { get; set; }
-
-        public override ValidationResult Validate()
-        {
-            return Namespace == null ? ValidationResult.Error("Namespace must be specified") : ValidationResult.Success();
-        }
-
-        public ServiceBusAdministrationClient AdministrationClient => new(Namespace, new DefaultAzureCredential());
     }
 
-    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         await AnsiConsole.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())

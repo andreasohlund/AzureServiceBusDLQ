@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 public abstract class CancellableAsyncCommand<TSettings> : AsyncCommand<TSettings> where TSettings : CommandSettings
 {
-    public abstract Task<int> ExecuteAsync(CommandContext context, TSettings settings, CancellationToken cancellation);
+    protected abstract Task<int> ExecuteAsync(CommandContext context, TSettings settings, CancellationToken cancellation);
 
     public sealed override async Task<int> ExecuteAsync(CommandContext context, TSettings settings)
     {
@@ -13,8 +13,7 @@ public abstract class CancellableAsyncCommand<TSettings> : AsyncCommand<TSetting
         using var sigQuit = PosixSignalRegistration.Create(PosixSignal.SIGQUIT, onSignal);
         using var sigTerm = PosixSignalRegistration.Create(PosixSignal.SIGTERM, onSignal);
 
-        var cancellable = ExecuteAsync(context, settings, cancellationSource.Token);
-        return await cancellable;
+        return await ExecuteAsync(context, settings, cancellationSource.Token);;
 
         void onSignal(PosixSignalContext signalContext)
         {
