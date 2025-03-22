@@ -6,7 +6,6 @@ using NUnit.Framework;
 public class CommandTestFixture
 {
     protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
-
     
     protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
 
