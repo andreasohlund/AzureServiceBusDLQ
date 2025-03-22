@@ -15,8 +15,7 @@ public static class AzureClientFactoryExtensions
                 throw new InvalidOperationException("All commands must use BaseSettings");
             }
 
-            return new ServiceBusAdministrationClient(settings.Namespace, new DefaultAzureCredential());
+            return settings.Namespace is null ? new ServiceBusAdministrationClient(settings.ConnectionString) : new ServiceBusAdministrationClient(settings.Namespace, new DefaultAzureCredential());
         });
     }
-
 }

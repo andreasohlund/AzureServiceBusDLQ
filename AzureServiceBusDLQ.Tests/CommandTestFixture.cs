@@ -3,33 +3,36 @@ using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using NUnit.Framework;
 
-[TestFixture]
 public class CommandTestFixture
 {
-    [Test]
-    public async Task Status_all_queues()
-    {
-        var (output, error, exitCode) = await Execute($"queues");
+    protected static string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
 
-        Assert.Multiple(() =>
+    protected string ServiceBusNamespace
+    {
+        get
         {
-            Assert.That(exitCode, Is.EqualTo(0));
-            Assert.That(error, Is.EqualTo(string.Empty));
-        });
+            return ConnectionString.Split(";")
+                .Single(p=>p.StartsWith("Endpoint="))
+                .Split("=")[1]
+                .Replace("sb://", "")
+                .Replace("/", "");
+        }
     }
 
     [SetUp]
     public void Setup()
-        => client = new ServiceBusAdministrationClient(Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString"));
+        => client = new ServiceBusAdministrationClient(ConnectionString);
 
-    static async Task<(string output, string error, int exitCode)> Execute(string command)
+    protected static async Task<string> ExecuteAndExpectSuccess(string command, string? connectionOptions = null)
     {
+        connectionOptions ??= "-c " + ConnectionString;
+
         var process = new Process();
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.WorkingDirectory = TestContext.CurrentContext.TestDirectory;
         process.StartInfo.FileName = "dotnet";
-        process.StartInfo.Arguments = $"AzureServiceBusDLQ.dll " + command + " -n winservice-repro.servicebus.windows.net";
+        process.StartInfo.Arguments = $"AzureServiceBusDLQ.dll {command} {connectionOptions}";
 
         process.Start();
         var outputTask = process.StandardOutput.ReadToEndAsync();
@@ -44,12 +47,13 @@ public class CommandTestFixture
             Console.WriteLine(output);
         }
 
-        if (error != string.Empty)
+        Assert.Multiple(() =>
         {
-            Console.WriteLine(error);
-        }
+            Assert.That(process.ExitCode, Is.EqualTo(0));
+            Assert.That(error, Is.EqualTo(string.Empty));
+        });
 
-        return (output, error, process.ExitCode);
+        return output;
     }
 
     async Task DeleteQueue(string queueName)

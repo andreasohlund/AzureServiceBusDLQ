@@ -8,8 +8,17 @@ public class BaseSettings : CommandSettings
     [CommandOption("-n|--namespace")]
     public string? Namespace { get; set; }
 
+    [Description("Service bus connection string")]
+    [CommandOption("-c|--connection-string")]
+    public string? ConnectionString { get; set; }
+
     public override ValidationResult Validate()
     {
-        return Namespace == null ? ValidationResult.Error("Namespace must be specified") : ValidationResult.Success();
+        if (Namespace is null && ConnectionString is null)
+        {
+            return ValidationResult.Error("Namespace or connection string must be specified");
+        }
+
+        return ValidationResult.Success();
     }
 }
