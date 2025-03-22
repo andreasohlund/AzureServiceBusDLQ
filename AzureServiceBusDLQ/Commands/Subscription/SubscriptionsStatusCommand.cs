@@ -23,11 +23,12 @@ public class SubscriptionsStatusCommand(ServiceBusAdministrationClient administr
                 };
 
                 subscriptionTable.AddColumn("Subscription");
-                subscriptionTable.AddColumn(new TableColumn("Count").Centered());
+                subscriptionTable.AddColumn(new TableColumn("DLQ").Centered());
+                subscriptionTable.AddColumn(new TableColumn("TDLQ").Centered());
 
                 foreach (var subscription in subscriptions)
                 {
-                    subscriptionTable.AddRow(subscription.SubscriptionName, $"{subscription.DeadLetterMessageCount.ToString()}:{subscription.TransferDeadLetterMessageCount.ToString()}");
+                    subscriptionTable.AddRow(subscription.SubscriptionName, subscription.DeadLetterMessageCount.ToString(), subscription.TransferDeadLetterMessageCount.ToString());
                 }
 
                 AnsiConsole.Write(subscriptionTable);

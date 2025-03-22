@@ -21,12 +21,12 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
                 };
 
                 queueTable.AddColumn("Queue");
-                queueTable.AddColumn(new TableColumn("Count").Centered());
+                queueTable.AddColumn(new TableColumn("DLQ").Centered());
+                queueTable.AddColumn(new TableColumn("TDLQ").Centered());
 
                 foreach (var queue in queues)
                 {
-                    queueTable.AddRow(queue.Name, $"{queue.DeadLetterMessageCount.ToString()}:{queue.TransferDeadLetterMessageCount.ToString()}");
-                }
+                    queueTable.AddRow(queue.Name, queue.DeadLetterMessageCount.ToString(), queue.TransferDeadLetterMessageCount.ToString());}
 
                 AnsiConsole.Write(queueTable);
             });

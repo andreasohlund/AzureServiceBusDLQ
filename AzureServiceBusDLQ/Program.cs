@@ -16,4 +16,4 @@ app.Configure(config =>
     config.AddCommand<SubscriptionsStatusCommand>("subscriptions");
 });
 
-await app.RunAsync(args);
+return await app.RunAsync(args);
