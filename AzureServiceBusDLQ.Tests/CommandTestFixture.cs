@@ -5,9 +5,12 @@ using NUnit.Framework;
 
 public class CommandTestFixture
 {
-    protected static string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
+    protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
 
-    protected string ServiceBusNamespace
+    
+    protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
+
+    protected static string ServiceBusNamespace
     {
         get
         {
@@ -21,9 +24,19 @@ public class CommandTestFixture
 
     [SetUp]
     public void Setup()
-        => client = new ServiceBusAdministrationClient(ConnectionString);
-
-    protected static async Task<string> ExecuteAndExpectSuccess(string command, string? connectionOptions = null)
+    {
+        client = new ServiceBusAdministrationClient(ConnectionString);
+        
+        testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
+    }
+    
+    [TearDown]
+    public void Cleanup()
+    {
+        testCancellationTokenSource?.Dispose();
+    }
+    
+    protected async Task<string> ExecuteAndExpectSuccess(string command, string? connectionOptions = null)
     {
         connectionOptions ??= "-c " + ConnectionString;
 
@@ -35,12 +48,13 @@ public class CommandTestFixture
         process.StartInfo.Arguments = $"AzureServiceBusDLQ.dll {command} {connectionOptions}";
 
         process.Start();
-        var outputTask = process.StandardOutput.ReadToEndAsync();
-        var errorTask = process.StandardError.ReadToEndAsync();
-        process.WaitForExit(10000); //TODO: async
+        var outputTask = process.StandardOutput.ReadToEndAsync(TestTimeoutCancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync(TestTimeoutCancellationToken);
+        
+        await process.WaitForExitAsync(TestTimeoutCancellationToken);
 
-        var output = await outputTask;
-        var error = await errorTask;
+        var output = await outputTask.WaitAsync(TestTimeoutCancellationToken);
+        var error = await errorTask.WaitAsync(TestTimeoutCancellationToken);
 
         if (output != string.Empty)
         {
@@ -79,4 +93,9 @@ public class CommandTestFixture
     }
 
     ServiceBusAdministrationClient client;
+    
+    
+    CancellationTokenSource testCancellationTokenSource;
+
+    static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
 }

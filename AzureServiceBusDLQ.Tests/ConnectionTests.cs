@@ -1,7 +1,5 @@
 using NUnit.Framework;
 
-namespace AzureServiceBusDLQ.Tests;
-
 [TestFixture]
 public class ConnectionTests : CommandTestFixture
 {
