@@ -6,15 +6,15 @@ using NUnit.Framework;
 public class CommandTestFixture
 {
     protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
-    
-    protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
+
+    CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
 
     protected static string ServiceBusNamespace
     {
         get
         {
             return ConnectionString.Split(";")
-                .Single(p=>p.StartsWith("Endpoint="))
+                .Single(p => p.StartsWith("Endpoint="))
                 .Split("=")[1]
                 .Replace("sb://", "")
                 .Replace("/", "");
@@ -25,17 +25,17 @@ public class CommandTestFixture
     public void Setup()
     {
         client = new ServiceBusAdministrationClient(ConnectionString);
-        
+
         testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
     }
-    
+
     [TearDown]
     public void Cleanup()
     {
         testCancellationTokenSource?.Dispose();
     }
-    
-    protected async Task<string> ExecuteAndExpectSuccess(string command, string? connectionOptions = null)
+
+    protected async Task<CommandResult> ExecuteCommand(string command, string? connectionOptions = null)
     {
         connectionOptions ??= "-c " + ConnectionString;
 
@@ -49,7 +49,7 @@ public class CommandTestFixture
         process.Start();
         var outputTask = process.StandardOutput.ReadToEndAsync(TestTimeoutCancellationToken);
         var errorTask = process.StandardError.ReadToEndAsync(TestTimeoutCancellationToken);
-        
+
         await process.WaitForExitAsync(TestTimeoutCancellationToken);
 
         var output = await outputTask.WaitAsync(TestTimeoutCancellationToken);
@@ -60,13 +60,25 @@ public class CommandTestFixture
             Console.WriteLine(output);
         }
 
+        if (error != string.Empty)
+        {
+            Console.WriteLine(error);
+        }
+
+        return new CommandResult(process.ExitCode, output, error);
+    }
+
+    protected async Task<string> ExecuteCommandAndExpectSuccess(string command, string? connectionOptions = null)
+    {
+        var result = await ExecuteCommand(command, connectionOptions);
+
         Assert.Multiple(() =>
         {
-            Assert.That(process.ExitCode, Is.EqualTo(0));
-            Assert.That(error, Is.EqualTo(string.Empty));
+            Assert.That(result.ExitCode, Is.EqualTo(0));
+            Assert.That(result.Error, Is.EqualTo(string.Empty));
         });
 
-        return output;
+        return result.Output;
     }
 
     async Task DeleteQueue(string queueName)
@@ -92,8 +104,6 @@ public class CommandTestFixture
     }
 
     ServiceBusAdministrationClient client;
-    
-    
     CancellationTokenSource testCancellationTokenSource;
 
     static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);

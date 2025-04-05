@@ -6,12 +6,12 @@ public class ConnectionTests : CommandTestFixture
     [Test]
     public async Task SupportConnectionString()
     {
-        _ = await ExecuteAndExpectSuccess($"queues", "-c " + ConnectionString);
+        _ = await ExecuteCommandAndExpectSuccess($"queues", "-c " + ConnectionString);
     }
     
     [Test]
     public async Task SupportNamespaceWithDefaultCredentials()
     {
-        _ = await ExecuteAndExpectSuccess($"queues", "-n " + ServiceBusNamespace);
+        _ = await ExecuteCommandAndExpectSuccess($"queues", "-n " + ServiceBusNamespace);
     }
 }
