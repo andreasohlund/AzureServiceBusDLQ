@@ -7,13 +7,14 @@ public class QueuesStatusTests : CommandTestFixture
     [Test]
     public async Task ReturnsZeroWhenNoQueuesHaveDLQMessages()
     {
+        await ClearAllTestQueues();
         _ = await ExecuteCommandAndExpectSuccess($"queues");
     }
     
     [Test]
     public async Task ReturnsNonZeroWhenAtLeastOneQueueHaveDLQMessages()
     {
-        
+        await ClearAllTestQueues();
         await CreateQueueWithDLQMessage(TestQueueName);
         var result = await ExecuteCommand($"queues");
         

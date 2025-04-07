@@ -9,7 +9,7 @@ public class CommandTestFixture
     protected ServiceBusAdministrationClient AdministrationClient;
     protected ServiceBusClient ServiceBusClient;
     protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
-    protected string TestQueueName => $"asq-dlq-test-{TestContext.CurrentContext.Test.ID}";
+    protected string TestQueueName => $"{TestQueueNamePrefix}-{TestContext.CurrentContext.Test.ID}";
 
     protected static string ServiceBusNamespace
     {
@@ -94,6 +94,18 @@ public class CommandTestFixture
         }
     }
 
+
+    protected async Task ClearAllTestQueues()
+    {
+        await foreach (var queue in AdministrationClient.GetQueuesRuntimePropertiesAsync(TestTimeoutCancellationToken))
+        {
+            if (queue.Name.StartsWith(TestQueueNamePrefix))
+            {
+                await AdministrationClient.DeleteQueueAsync(queue.Name, TestTimeoutCancellationToken);
+            }
+        }
+    }
+
     async Task DeleteTopic(string topicName)
     {
         try
@@ -107,5 +119,6 @@ public class CommandTestFixture
 
     CancellationTokenSource testCancellationTokenSource;
 
+    const string TestQueueNamePrefix = "asq-dlq-test";
     static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
 }
