@@ -6,8 +6,10 @@ using NUnit.Framework;
 public class CommandTestFixture
 {
     protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
-
-    CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
+    protected ServiceBusAdministrationClient AdministrationClient;
+    protected ServiceBusClient ServiceBusClient;
+    protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
+    protected string TestQueueName => $"asq-dlq-test-{TestContext.CurrentContext.Test.ID}";
 
     protected static string ServiceBusNamespace
     {
@@ -24,8 +26,8 @@ public class CommandTestFixture
     [SetUp]
     public void Setup()
     {
-        client = new ServiceBusAdministrationClient(ConnectionString);
-
+        AdministrationClient = new ServiceBusAdministrationClient(ConnectionString);
+        ServiceBusClient = new ServiceBusClient(ConnectionString);
         testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
     }
 
@@ -81,11 +83,11 @@ public class CommandTestFixture
         return result.Output;
     }
 
-    async Task DeleteQueue(string queueName)
+    protected async Task DeleteQueue(string queueName)
     {
         try
         {
-            await client.DeleteQueueAsync(queueName);
+            await AdministrationClient.DeleteQueueAsync(queueName, TestTimeoutCancellationToken);
         }
         catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
         {
@@ -96,14 +98,13 @@ public class CommandTestFixture
     {
         try
         {
-            await client.DeleteTopicAsync(topicName);
+            await AdministrationClient.DeleteTopicAsync(topicName);
         }
         catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
         {
         }
     }
 
-    ServiceBusAdministrationClient client;
     CancellationTokenSource testCancellationTokenSource;
 
     static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
