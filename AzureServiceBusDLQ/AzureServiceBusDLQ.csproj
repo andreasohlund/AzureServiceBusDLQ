@@ -9,14 +9,19 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>asb-dlq</ToolCommandName>
         <PackageOutputPath>../nupkg</PackageOutputPath>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Identity" />
+        <PackageReference Include="Azure.Identity"/>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-        <PackageReference Include="Spectre.Console" />
-        <PackageReference Include="Spectre.Console.Cli" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
+        <PackageReference Include="Spectre.Console"/>
+        <PackageReference Include="Spectre.Console.Cli"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>
