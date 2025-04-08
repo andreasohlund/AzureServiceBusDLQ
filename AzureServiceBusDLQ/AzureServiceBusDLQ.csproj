@@ -10,6 +10,7 @@
         <ToolCommandName>asb-dlq</ToolCommandName>
         <PackageOutputPath>../nupkg</PackageOutputPath>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>
