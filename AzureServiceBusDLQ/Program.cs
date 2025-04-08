@@ -11,7 +11,10 @@ var app = new CommandApp(new TypeRegistrar(serviceCollection));
 
 app.Configure(config =>
 {
+#if DEBUG
     config.PropagateExceptions();
+    config.ValidateExamples();
+#endif
     config.SetInterceptor(new CommandSettingsInterceptor(contextProvider));
     config.AddCommand<QueuesStatusCommand>("queues");
     config.AddCommand<SubscriptionsStatusCommand>("subscriptions");
