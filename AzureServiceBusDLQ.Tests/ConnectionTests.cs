@@ -15,6 +15,7 @@ public class ConnectionTests : CommandTestFixture
     public async Task SupportNamespaceWithDefaultCredentials()
     {
         var result = await ExecuteCommand($"queues", "-n " + ServiceBusNamespace);
+        
         Assert.That(result.Error, Is.Empty);
     }
 }

@@ -19,9 +19,17 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
 
                 var queuesWithDLQMessages = queues.Where(q => q.DeadLetterMessageCount > 0 || q.TransferDeadLetterMessageCount > 0)
                     .ToList();
+
+                dlqMessagesExists = queuesWithDLQMessages.Any();
+                if (!dlqMessagesExists)
+                {
+                    AnsiConsole.WriteLine($"No DLQ messages found in {queues.Count} queues");
+                    return;
+                }
+
                 var queueTable = new Table
                 {
-                    Title = new TableTitle("Queue DLQ Status")
+                    Title = new TableTitle($"DLQ Status ({queues.Count} queues checked)")
                 };
 
                 queueTable.AddColumn("Queue");
@@ -34,8 +42,6 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
                 }
 
                 AnsiConsole.Write(queueTable);
-
-                dlqMessagesExists = queuesWithDLQMessages.Any();
             });
 
 

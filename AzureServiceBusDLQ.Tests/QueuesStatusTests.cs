@@ -8,7 +8,9 @@ public class QueuesStatusTests : CommandTestFixture
     public async Task ReturnsZeroWhenNoQueuesHaveDLQMessages()
     {
         await ClearAllTestQueues();
-        _ = await ExecuteCommandAndExpectSuccess($"queues");
+        var output = await ExecuteCommandAndExpectSuccess($"queues");
+
+        Assert.That(output, Contains.Substring("No DLQ messages found"));
     }
     
     [Test]
@@ -16,9 +18,11 @@ public class QueuesStatusTests : CommandTestFixture
     {
         await ClearAllTestQueues();
         await CreateQueueWithDLQMessage(TestQueueName);
+        
         var result = await ExecuteCommand($"queues");
         
         Assert.That(result.ExitCode, Is.Not.Zero);
+        Assert.That(result.Output, Contains.Substring(TestQueueName));
     }
     
     async Task CreateQueueWithDLQMessage(string queueName)

@@ -59,12 +59,12 @@ public class CommandTestFixture
 
         if (output != string.Empty)
         {
-            Console.WriteLine(output);
+            TestContext.WriteLine(output);
         }
 
         if (error != string.Empty)
         {
-            Console.WriteLine(error);
+            TestContext.WriteLine(error);
         }
 
         return new CommandResult(process.ExitCode, output, error);
