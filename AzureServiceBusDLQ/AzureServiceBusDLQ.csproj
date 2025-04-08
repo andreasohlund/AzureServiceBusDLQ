@@ -11,6 +11,9 @@
         <PackageOutputPath>../nupkg</PackageOutputPath>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/andreasohlund/AzureServiceBusDLQ</PackageProjectUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <PackageReleaseNotes>https://github.com/andreasohlund/AzureServiceBusDLQ/blob/main/CHANGELOG.md</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>
