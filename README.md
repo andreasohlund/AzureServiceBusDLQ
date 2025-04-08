@@ -2,7 +2,7 @@
 
 ## Installing
 
-Use `dotnet tool install --global AzureServiceBusDLQ --version 1.0.0-alpha.0.3` install the tool.
+Use `dotnet tool install AzureServiceBusDLQ --global --prerelease` install the tool.
 
 ## Connecting
 
