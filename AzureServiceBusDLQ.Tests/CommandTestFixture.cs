@@ -87,10 +87,15 @@ public class CommandTestFixture
         return result.Output;
     }
 
-    protected async Task CreateQueueWithDLQMessage(string queueName)
+    protected async Task CreateQueue(string queueName)
     {
         await DeleteQueue(queueName);
         await AdministrationClient.CreateQueueAsync(queueName, TestTimeoutCancellationToken);
+    }
+
+    protected async Task CreateQueueWithDLQMessage(string queueName)
+    {
+        await CreateQueue(queueName);
 
         await using var sender = ServiceBusClient.CreateSender(queueName);
 

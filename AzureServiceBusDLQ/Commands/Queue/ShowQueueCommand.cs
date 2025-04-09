@@ -31,14 +31,20 @@ public class ShowQueueCommand(ServiceBusAdministrationClient administrationClien
                 var queuesProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}");
 
                 var result = await administrationClient.GetQueueRuntimePropertiesAsync(settings.QueueName, cancellationToken);
-
-                var properties = result.Value;
-
                 queuesProgress.StopTask();
+
+                var queue = result.Value;
+
+                dlqMessagesExists = queue.DeadLetterMessageCount > 0 || queue.TransferDeadLetterMessageCount > 0;
+                if (!dlqMessagesExists)
+                {
+                    AnsiConsole.WriteLine($"No DLQ messages found in {queue.Name}");
+                    return;
+                }
 
                 var queueTable = new Table
                 {
-                    Title = new TableTitle($"DLQ Messages in {properties.Name}")
+                    Title = new TableTitle($"DLQ Messages in {queue.Name}")
                 };
 
                 queueTable.AddColumn("Queue");
