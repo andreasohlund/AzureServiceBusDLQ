@@ -6,7 +6,7 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
 {
     protected override async Task<int> ExecuteAsync(CommandContext context, BaseSettings settings, CancellationToken cancellationToken)
     {
-        bool dlqMessagesExists = false;
+        var dlqMessagesExists = false;
 
         await AnsiConsole.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
