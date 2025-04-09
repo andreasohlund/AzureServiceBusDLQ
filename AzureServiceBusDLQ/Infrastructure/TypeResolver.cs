@@ -14,7 +14,7 @@ public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IAs
 
     public void Dispose()
     {
-        //TODO: Hack until spectre support async disposable (add issue link) 
+        //Hack until spectre support async disposable (add issue/pr link) 
         DisposeAsync().GetAwaiter().GetResult();
     }
 
