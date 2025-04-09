@@ -1,6 +1,6 @@
 using Spectre.Console.Cli;
 
-public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IDisposable
+public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IAsyncDisposable, IDisposable
 {
     public object Resolve(Type type)
     {
@@ -14,9 +14,15 @@ public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IDi
 
     public void Dispose()
     {
-        if (provider is IDisposable disposable)
+        //TODO: Hack until spectre support async disposable (add issue link) 
+        DisposeAsync().GetAwaiter().GetResult();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (provider is IAsyncDisposable disposable)
         {
-            disposable.Dispose();
+            await disposable.DisposeAsync();
         }
     }
 }

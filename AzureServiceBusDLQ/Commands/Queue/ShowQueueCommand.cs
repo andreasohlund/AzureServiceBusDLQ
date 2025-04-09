@@ -1,9 +1,10 @@
 using System.ComponentModel;
+using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class ShowQueueCommand(ServiceBusAdministrationClient administrationClient) : CancellableAsyncCommand<ShowQueueCommand.Settings>
+public class ShowQueueCommand(ServiceBusAdministrationClient administrationClient, ServiceBusClient serviceBusClient) : CancellableAsyncCommand<ShowQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -28,7 +29,7 @@ public class ShowQueueCommand(ServiceBusAdministrationClient administrationClien
             .HideCompleted(true)
             .StartAsync(async ctx =>
             {
-                var queuesProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}");
+                var queuesProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true);
 
                 var result = await administrationClient.GetQueueRuntimePropertiesAsync(settings.QueueName, cancellationToken);
                 queuesProgress.StopTask();
@@ -42,19 +43,52 @@ public class ShowQueueCommand(ServiceBusAdministrationClient administrationClien
                     return;
                 }
 
+                var messagePeekProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true, queue.DeadLetterMessageCount);
+
+                await using var receiver = serviceBusClient.CreateReceiver(queue.Name, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
+
+                var dlqMessages = new List<ServiceBusReceivedMessage>();
+                var previousSequenceNumber = -1L;
+                var sequenceNumber = 0L;
+
+                do
+                {
+                    var messageBatch = await receiver.PeekMessagesAsync(int.MaxValue, sequenceNumber, cancellationToken);
+
+                    if (messageBatch.Count > 0)
+                    {
+                        sequenceNumber = messageBatch[^1].SequenceNumber;
+
+                        if (sequenceNumber == previousSequenceNumber)
+                            break;
+
+                        dlqMessages.AddRange(messageBatch);
+
+                        messagePeekProgress.Increment(messageBatch.Count);
+                        previousSequenceNumber = sequenceNumber;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                } while (true);
+
+                messagePeekProgress.StopTask();
+
                 var queueTable = new Table
                 {
-                    Title = new TableTitle($"DLQ Messages in {queue.Name}")
+                    Title = new TableTitle($"DLQ Messages in {queue.Name} ({dlqMessages.Count})")
                 };
 
-                queueTable.AddColumn("Queue");
-                queueTable.AddColumn(new TableColumn("DLQ").Centered());
-                queueTable.AddColumn(new TableColumn("TDLQ").Centered());
+                queueTable.AddColumn("MessageId");
+                queueTable.AddColumn(new TableColumn("DLQ Reason").Centered());
+                queueTable.AddColumn(new TableColumn("DLQ Description").Centered());
+                queueTable.AddColumn(new TableColumn("DLQ Source").Centered());
 
-//                foreach (var queue in queuesWithDLQMessages)
-//                {
-//                    queueTable.AddRow(queue.Name, queue.DeadLetterMessageCount.ToString(), queue.TransferDeadLetterMessageCount.ToString());
-//                }
+                foreach (var message in dlqMessages)
+                {
+                    queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
+                }
 
                 AnsiConsole.Write(queueTable);
             });
