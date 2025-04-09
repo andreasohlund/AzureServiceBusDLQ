@@ -23,12 +23,16 @@ public class CommandTestFixture
         }
     }
 
+
     [SetUp]
-    public void Setup()
+    public async Task Setup()
     {
         AdministrationClient = new ServiceBusAdministrationClient(ConnectionString);
         ServiceBusClient = new ServiceBusClient(ConnectionString);
+
         testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
+
+        await ClearAllTestQueues();
     }
 
     [TearDown]
@@ -83,7 +87,23 @@ public class CommandTestFixture
         return result.Output;
     }
 
-    protected async Task DeleteQueue(string queueName)
+    protected async Task CreateQueueWithDLQMessage(string queueName)
+    {
+        await DeleteQueue(queueName);
+        await AdministrationClient.CreateQueueAsync(queueName, TestTimeoutCancellationToken);
+
+        await using var sender = ServiceBusClient.CreateSender(queueName);
+
+        await sender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
+
+        await using var receiver = ServiceBusClient.CreateReceiver(queueName);
+
+        var message = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
+
+        await receiver.DeadLetterMessageAsync(message, "Some reason", "Some description", TestTimeoutCancellationToken);
+    }
+
+    async Task DeleteQueue(string queueName)
     {
         try
         {
