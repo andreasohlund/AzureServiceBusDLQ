@@ -43,57 +43,82 @@ public class ShowQueueCommand(ServiceBusAdministrationClient administrationClien
                     return;
                 }
 
-                var messagePeekProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true, queue.DeadLetterMessageCount);
-
-                await using var receiver = serviceBusClient.CreateReceiver(queue.Name, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
-
-                var dlqMessages = new List<ServiceBusReceivedMessage>();
-                var previousSequenceNumber = -1L;
-                var sequenceNumber = 0L;
-
-                do
+                if (queue.DeadLetterMessageCount > 0)
                 {
-                    var messageBatch = await receiver.PeekMessagesAsync(int.MaxValue, sequenceNumber, cancellationToken);
+                    var dlqProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true, queue.DeadLetterMessageCount);
 
-                    if (messageBatch.Count > 0)
-                    {
-                        sequenceNumber = messageBatch[^1].SequenceNumber;
+                    var dlqMessages = await GetMessagesForSubQueue(queue, SubQueue.DeadLetter, dlqProgress, cancellationToken);
 
-                        if (sequenceNumber == previousSequenceNumber)
-                            break;
+                    dlqProgress.StopTask();
 
-                        dlqMessages.AddRange(messageBatch);
-
-                        messagePeekProgress.Increment(messageBatch.Count);
-                        previousSequenceNumber = sequenceNumber;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                } while (true);
-
-                messagePeekProgress.StopTask();
-
-                var queueTable = new Table
-                {
-                    Title = new TableTitle($"DLQ Messages in {queue.Name} ({dlqMessages.Count})")
-                };
-
-                queueTable.AddColumn("MessageId");
-                queueTable.AddColumn(new TableColumn("DLQ Reason").Centered());
-                queueTable.AddColumn(new TableColumn("DLQ Description").Centered());
-                queueTable.AddColumn(new TableColumn("DLQ Source").Centered());
-
-                foreach (var message in dlqMessages)
-                {
-                    queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
+                    ShowDLQMessages(queue, dlqMessages);
                 }
 
-                AnsiConsole.Write(queueTable);
+                if (queue.TransferDeadLetterMessageCount > 0)
+                {
+                    var tDlqProgress = ctx.AddTask($"Fetching TDLQ status for {settings.QueueName}", autoStart: true, queue.TransferDeadLetterMessageCount);
+
+                    var tDlqMessages = await GetMessagesForSubQueue(queue, SubQueue.TransferDeadLetter, tDlqProgress, cancellationToken);
+
+                    tDlqProgress.StopTask();
+
+                    ShowDLQMessages(queue, tDlqMessages);
+                }
             });
-
-
+        
         return dlqMessagesExists ? 1 : 0;
+    }
+
+    static void ShowDLQMessages(QueueRuntimeProperties queue, List<ServiceBusReceivedMessage> dlqMessages)
+    {
+        var queueTable = new Table
+        {
+            Title = new TableTitle($"DLQ Messages in {queue.Name} ({dlqMessages.Count})")
+        };
+
+        queueTable.AddColumn("MessageId");
+        queueTable.AddColumn(new TableColumn("DLQ Reason").Centered());
+        queueTable.AddColumn(new TableColumn("DLQ Description").Centered());
+        queueTable.AddColumn(new TableColumn("DLQ Source").Centered());
+
+        foreach (var message in dlqMessages)
+        {
+            queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
+        }
+
+        AnsiConsole.Write(queueTable);
+    }
+
+    async Task<List<ServiceBusReceivedMessage>> GetMessagesForSubQueue(QueueRuntimeProperties queue, SubQueue subQueue, ProgressTask messagePeekProgress, CancellationToken cancellationToken)
+    {
+        await using var receiver = serviceBusClient.CreateReceiver(queue.Name, new ServiceBusReceiverOptions { SubQueue = subQueue });
+
+        var dlqMessages = new List<ServiceBusReceivedMessage>();
+        var previousSequenceNumber = -1L;
+        var sequenceNumber = 0L;
+
+        do
+        {
+            var messageBatch = await receiver.PeekMessagesAsync(int.MaxValue, sequenceNumber, cancellationToken);
+
+            if (messageBatch.Count > 0)
+            {
+                sequenceNumber = messageBatch[^1].SequenceNumber;
+
+                if (sequenceNumber == previousSequenceNumber)
+                    break;
+
+                dlqMessages.AddRange(messageBatch);
+
+                messagePeekProgress.Increment(messageBatch.Count);
+                previousSequenceNumber = sequenceNumber;
+            }
+            else
+            {
+                break;
+            }
+        } while (true);
+
+        return dlqMessages;
     }
 }
