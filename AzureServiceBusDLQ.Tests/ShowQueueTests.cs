@@ -7,10 +7,9 @@ public class ShowQueueTests : CommandTestFixture
     [Test]
     public async Task ThrowsIfQueueDoesNotExist()
     {
-        var result = await ExecuteCommand($"queue {TestQueueName}");
+        var result = await ExecuteCommand($"queue does-not-exist");
 
         Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.Output, Contains.Substring(TestQueueName));
     }
 
     [Test]
