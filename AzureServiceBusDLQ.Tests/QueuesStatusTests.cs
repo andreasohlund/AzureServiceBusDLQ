@@ -23,4 +23,15 @@ public class QueuesStatusTests : CommandTestFixture
         Assert.That(result.ExitCode, Is.Not.Zero);
         Assert.That(result.Output, Contains.Substring(TestQueueName));
     }
+    
+    [Test]
+    public async Task ReturnsNonZeroWhenAtLeastOneQueueHaveTDLQMessages()
+    {
+        await CreateQueueWithTDLQMessage(TestQueueName);
+        
+        var result = await ExecuteCommand($"queues");
+        
+        Assert.That(result.ExitCode, Is.Not.Zero);
+        Assert.That(result.Output, Contains.Substring(TestQueueName));
+    }
 }
