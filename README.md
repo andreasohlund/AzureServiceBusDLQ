@@ -2,7 +2,7 @@
 
 ## Installing
 
-Use `dotnet tool install AzureServiceBusDLQ --global --prerelease` install the tool.
+`dotnet tool install AzureServiceBusDLQ --global --prerelease`
 
 ## Connecting
 
@@ -18,6 +18,10 @@ In this example using the namespace name:
 
 `asb-dlq queues -n my-asb-namespace`
 
+Outputs:
+
+- All queues with at least one DLQ or TDLQ message.
+
 Returns:
 
 - `0` if no queues contains DLQ/TDLQ messages
@@ -32,7 +36,11 @@ In this example using the namespace name:
 
 `asb-dlq queue my-queue -n my-asb-namespace`
 
-Returns:
+Outputs:
+
+- Details of all DLQ and TDLQ messages for the specified queue.
+
+- Returns:
 
 - `0` if no DLQ/TDLQ messages exists
 - `1` if at least one DLQ/TDLQ message exists
