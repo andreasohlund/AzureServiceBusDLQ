@@ -1,3 +1,4 @@
+using System.Transactions;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
@@ -22,7 +23,7 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
         {
             throw new InvalidOperationException($"Queue {queueName} does not exist");
         }
-        
+
         return result.Value;
     }
 
@@ -61,6 +62,26 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
 
     public async Task<List<ServiceBusReceivedMessage>> RetryDeadLetterMessages(QueueRuntimeProperties queue, ProgressTask progress, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await using var receiver = serviceBusClient.CreateReceiver(queue.Name, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
+        await using var sender = serviceBusClient.CreateSender(queue.Name);
+
+        var dlqMessages = new List<ServiceBusReceivedMessage>();
+
+        await foreach (var dlqMessage in receiver.ReceiveMessagesAsync(cancellationToken))
+        {
+            using(var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var messageToRetry = new ServiceBusMessage(dlqMessage);
+                
+                await sender.SendMessageAsync(messageToRetry, cancellationToken);
+             
+                await receiver.CompleteMessageAsync(dlqMessage, cancellationToken);
+                scope.Complete();
+            }
+            dlqMessages.Add(dlqMessage);
+            progress.Increment(1);
+        }
+
+        return dlqMessages;
     }
 }

@@ -93,19 +93,21 @@ public class CommandTestFixture
         await AdministrationClient.CreateQueueAsync(queueName, TestTimeoutCancellationToken);
     }
 
-    protected async Task CreateQueueWithDLQMessage(string queueName)
+    protected async Task CreateQueueWithDLQMessage(string queueName, ServiceBusMessage? message = null)
     {
         await CreateQueue(queueName);
 
         await using var sender = ServiceBusClient.CreateSender(queueName);
+        
+        message ??= new ServiceBusMessage();
 
-        await sender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
+        await sender.SendMessageAsync(message, TestTimeoutCancellationToken);
 
         await using var receiver = ServiceBusClient.CreateReceiver(queueName);
 
-        var message = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
+        var receivedMessage = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
 
-        await receiver.DeadLetterMessageAsync(message, "Some reason", "Some description", TestTimeoutCancellationToken);
+        await receiver.DeadLetterMessageAsync(receivedMessage, "Some reason", "Some description", TestTimeoutCancellationToken);
     }
 
     async Task DeleteQueue(string queueName)
@@ -145,5 +147,5 @@ public class CommandTestFixture
     CancellationTokenSource testCancellationTokenSource;
 
     const string TestQueueNamePrefix = "asq-dlq-test";
-    static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(30);
+    static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
 }

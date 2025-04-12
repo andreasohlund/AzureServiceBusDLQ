@@ -1,4 +1,5 @@
 using Azure.Messaging.ServiceBus;
+using Microsoft.Azure.Amqp.Framing;
 using NUnit.Framework;
 
 [TestFixture]
@@ -25,10 +26,16 @@ public class RetryQueueTests : CommandTestFixture
     [Test]
     public async Task RetriesDLQMessagesInQueue()
     {
-        await CreateQueueWithDLQMessage(TestQueueName);
+        var testMessage = new ServiceBusMessage();
+        await CreateQueueWithDLQMessage(TestQueueName, testMessage);
         var result = await ExecuteCommand($"retry-queue {TestQueueName}");
 
         Assert.That(result.ExitCode, Is.Not.Zero);
-        Assert.That(result.Output, Contains.Substring(TestQueueName));
+
+        await using var receiver = ServiceBusClient.CreateReceiver(TestQueueName);
+
+        var retriedMessage = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
+
+        Assert.That(retriedMessage.MessageId, Is.EqualTo(testMessage.MessageId));
     }
 }

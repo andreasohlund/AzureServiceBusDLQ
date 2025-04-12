@@ -39,7 +39,7 @@ public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsy
 
                 var progress = ctx.AddTask($"Retrying DLQ messages for {queueName}", autoStart: true, queue.DeadLetterMessageCount);
 
-                var dlqMessages = await queueOperations.RetryDeadLetterMessages(queue,progress, cancellationToken);
+                var dlqMessages = await queueOperations.RetryDeadLetterMessages(queue, progress, cancellationToken);
 
                 progress.StopTask();
 
