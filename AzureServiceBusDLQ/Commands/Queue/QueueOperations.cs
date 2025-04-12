@@ -67,17 +67,25 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
 
         var dlqMessages = new List<ServiceBusReceivedMessage>();
 
-        await foreach (var dlqMessage in receiver.ReceiveMessagesAsync(cancellationToken))
+        while (!cancellationToken.IsCancellationRequested)
         {
-            using(var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            var dlqMessage = await receiver.ReceiveMessageAsync(TimeSpan.FromSeconds(1), cancellationToken);
+
+            if (dlqMessage == null)
+            {
+                return dlqMessages;
+            }
+
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 var messageToRetry = new ServiceBusMessage(dlqMessage);
-                
+
                 await sender.SendMessageAsync(messageToRetry, cancellationToken);
-             
+
                 await receiver.CompleteMessageAsync(dlqMessage, cancellationToken);
                 scope.Complete();
             }
+
             dlqMessages.Add(dlqMessage);
             progress.Increment(1);
         }

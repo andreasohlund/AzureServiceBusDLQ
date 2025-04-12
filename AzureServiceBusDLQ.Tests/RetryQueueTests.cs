@@ -26,7 +26,10 @@ public class RetryQueueTests : CommandTestFixture
     [Test]
     public async Task RetriesDLQMessagesInQueue()
     {
-        var testMessage = new ServiceBusMessage();
+        var testMessage = new ServiceBusMessage
+        {
+            MessageId = Guid.NewGuid().ToString(),
+        };
         await CreateQueueWithDLQMessage(TestQueueName, testMessage);
         var result = await ExecuteCommand($"retry-queue {TestQueueName}");
 
@@ -37,5 +40,8 @@ public class RetryQueueTests : CommandTestFixture
         var retriedMessage = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
 
         Assert.That(retriedMessage.MessageId, Is.EqualTo(testMessage.MessageId));
+        Assert.That(retriedMessage.DeadLetterReason, Is.Null);
+        Assert.That(retriedMessage.DeadLetterErrorDescription, Is.Null);
+        Assert.That(retriedMessage.DeadLetterSource, Is.Null);
     }
 }
