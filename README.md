@@ -6,6 +6,9 @@
 
 ## Connecting
 
+> [!NOTE]  
+> [Listen claims](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization) is required.
+
 Connecting to the azure service bus namespace can be done in two ways:
 
 - Using a connection string: `-c {my connection string}`
@@ -31,9 +34,6 @@ Returns:
 
 In this example using the namespace name:
 
-> [!NOTE]  
-> [Listen claims](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization) is needed to view DLQ messages
-
 `asb-dlq queue my-queue -n my-asb-namespace`
 
 Outputs:
@@ -44,3 +44,23 @@ Outputs:
 
 - `0` if no DLQ/TDLQ messages exists
 - `1` if at least one DLQ/TDLQ message exists
+
+## Retry DLQ messages for a specific queue
+
+Retries DLQ messages by moving them back to the parent queue.
+
+> [!NOTE]  
+> [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that the retry is atomic.
+
+In this example using the namespace name:
+
+`asb-dlq retry-queue my-queue -n my-asb-namespace`
+
+Outputs:
+
+- Message details for retried messages.
+
+- Returns:
+
+- `0` if messages where retried successfully or if no DLQ messages where found.
+- `1` if DLQ messages failed to be retried

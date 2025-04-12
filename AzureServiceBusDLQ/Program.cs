@@ -18,6 +18,7 @@ app.Configure(config =>
     config.SetInterceptor(new CommandSettingsInterceptor(contextProvider));
     config.AddCommand<QueuesStatusCommand>("queues");
     config.AddCommand<ShowQueueCommand>("queue");
+    config.AddCommand<RetryQueueCommand>("retry-queue");
     config.AddCommand<SubscriptionsStatusCommand>("subscriptions");
 });
 

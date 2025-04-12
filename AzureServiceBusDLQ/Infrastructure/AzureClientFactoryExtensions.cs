@@ -30,5 +30,6 @@ public static class AzureClientFactoryExtensions
 
             return settings.Namespace is null ? new ServiceBusClient(settings.ConnectionString) : new ServiceBusClient(settings.Namespace, new DefaultAzureCredential());
         });
+        serviceCollection.AddSingleton<QueueOperations>();
     }
 }

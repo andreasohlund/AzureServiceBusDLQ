@@ -4,59 +4,46 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class ShowQueueCommand(QueueOperations queueOperations) : CancellableAsyncCommand<ShowQueueCommand.Settings>
+public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsyncCommand<RetryQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
-        [Description("Queue name to be displayed")]
+        [Description("Queue name to be retried")]
         [CommandArgument(0, "<QueueName>")]
         public string QueueName { get; set; } = null!;
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        await queueOperations.EnsureQueueExists(settings.QueueName, cancellationToken);
-
         var dlqMessagesExists = false;
+        var queueName = settings.QueueName;
+
+        await queueOperations.EnsureQueueExists(settings.QueueName, cancellationToken);
 
         await AnsiConsole.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
             {
-                var queuesProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true);
+                var queuesProgress = ctx.AddTask($"Fetching DLQ status for {queueName}", autoStart: true);
 
-                var queue = await queueOperations.GetQueueRuntimeProperties(settings.QueueName, cancellationToken);
+                var queue = await queueOperations.GetQueueRuntimeProperties(queueName, cancellationToken);
                 queuesProgress.StopTask();
 
-                dlqMessagesExists = queue.DeadLetterMessageCount > 0 || queue.TransferDeadLetterMessageCount > 0;
+                dlqMessagesExists = queue.DeadLetterMessageCount > 0;
                 if (!dlqMessagesExists)
                 {
-                    AnsiConsole.WriteLine($"No DLQ messages found in {queue.Name}");
+                    AnsiConsole.WriteLine($"No DLQ messages to retry found in {queueName}");
                     return;
                 }
 
-                if (queue.DeadLetterMessageCount > 0)
-                {
-                    var dlqProgress = ctx.AddTask($"Fetching DLQ status for {settings.QueueName}", autoStart: true, queue.DeadLetterMessageCount);
+                var progress = ctx.AddTask($"Retrying DLQ messages for {queueName}", autoStart: true, queue.DeadLetterMessageCount);
 
-                    var dlqMessages = await queueOperations.GetMessagesForSubQueue(queue, SubQueue.DeadLetter, dlqProgress, cancellationToken);
+                var dlqMessages = await queueOperations.RetryDeadLetterMessages(queue,progress, cancellationToken);
 
-                    dlqProgress.StopTask();
+                progress.StopTask();
 
-                    ShowDLQMessages(queue, dlqMessages);
-                }
-
-                if (queue.TransferDeadLetterMessageCount > 0)
-                {
-                    var tDlqProgress = ctx.AddTask($"Fetching TDLQ status for {settings.QueueName}", autoStart: true, queue.TransferDeadLetterMessageCount);
-
-                    var tDlqMessages = await queueOperations.GetMessagesForSubQueue(queue, SubQueue.TransferDeadLetter, tDlqProgress, cancellationToken);
-
-                    tDlqProgress.StopTask();
-
-                    ShowDLQMessages(queue, tDlqMessages);
-                }
+                ShowDLQMessages(queue, dlqMessages);
             });
 
         return dlqMessagesExists ? 1 : 0;
