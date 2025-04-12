@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-alpha.4
+
+- Support retries of DLQ messages back to its parent queue
+
 ## 1.0.0-alpha.3
 
 - Add command to show dlq/tdlq messages in a given queue
