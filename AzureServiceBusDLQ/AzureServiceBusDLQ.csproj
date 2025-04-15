@@ -22,14 +22,14 @@
         <PackageReference Include="Azure.Identity"/>
         <PackageReference Include="Azure.Messaging.ServiceBus"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection"/>
-        <PackageReference Include="MinVer">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
         <PackageReference Include="Spectre.Console"/>
         <PackageReference Include="Spectre.Console.Cli"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <PackageReference Include="MinVer" PrivateAssets="all"/>
+    </ItemGroup>
+    
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
