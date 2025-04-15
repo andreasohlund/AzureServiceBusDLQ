@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 public class CommandTestFixture
 {
-    protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
+    protected static readonly string ConnectionString = "Endpoint=sb://seanfeldman-test.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=66FS4a7k+2VV7L9JE18E+4Q3WJFgLrkL9mrXbdBsONQ=";//Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
     protected ServiceBusAdministrationClient AdministrationClient;
     protected ServiceBusClient ServiceBusClient;
     protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
@@ -128,7 +128,9 @@ public class CommandTestFixture
         
         await sendViaSender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
 
-        await AdministrationClient.DeleteQueueAsync(targetQueueName, TestTimeoutCancellationToken);
+        QueueProperties targetQueueProperties = await AdministrationClient.GetQueueAsync(targetQueueName, TestTimeoutCancellationToken);
+        targetQueueProperties.Status = EntityStatus.Disabled;
+        await AdministrationClient.UpdateQueueAsync(targetQueueProperties, TestTimeoutCancellationToken);
 
         await receiver.CompleteMessageAsync(message, TestTimeoutCancellationToken);
        
