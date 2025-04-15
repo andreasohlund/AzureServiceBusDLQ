@@ -24,12 +24,13 @@ public class RetryQueueTests : CommandTestFixture
     }
 
     [Test]
-    public async Task RetriesDLQMessagesInQueue()
+    public async Task RetryDLQMessagesInQueue()
     {
         var testMessage = new ServiceBusMessage
         {
             MessageId = Guid.NewGuid().ToString(),
         };
+
         await CreateQueueWithDLQMessage(TestQueueName, testMessage);
         var result = await ExecuteCommand($"retry-queue {TestQueueName}");
 
