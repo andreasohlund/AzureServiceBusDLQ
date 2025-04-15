@@ -15,10 +15,9 @@ public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsy
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        var dlqMessagesExists = false;
-        var queueName = settings.QueueName;
-
         await queueOperations.EnsureQueueExists(settings.QueueName, cancellationToken);
+
+        var queueName = settings.QueueName;
 
         await AnsiConsole.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
@@ -30,8 +29,7 @@ public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsy
                 var queue = await queueOperations.GetQueueRuntimeProperties(queueName, cancellationToken);
                 queuesProgress.StopTask();
 
-                dlqMessagesExists = queue.DeadLetterMessageCount > 0;
-                if (!dlqMessagesExists)
+                if (queue.DeadLetterMessageCount == 0)
                 {
                     AnsiConsole.WriteLine($"No DLQ messages to retry found in {queueName}");
                     return;
@@ -43,29 +41,9 @@ public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsy
 
                 progress.StopTask();
 
-                ShowDLQMessages(queue, dlqMessages);
+                DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.DeadLetter, dlqMessages);
             });
-
-        return dlqMessagesExists ? 1 : 0;
-    }
-
-    static void ShowDLQMessages(QueueRuntimeProperties queue, List<ServiceBusReceivedMessage> dlqMessages)
-    {
-        var queueTable = new Table
-        {
-            Title = new TableTitle($"DLQ Messages in {queue.Name} ({dlqMessages.Count})")
-        };
-
-        queueTable.AddColumn("MessageId");
-        queueTable.AddColumn(new TableColumn("DLQ Reason").Centered());
-        queueTable.AddColumn(new TableColumn("DLQ Description").Centered());
-        queueTable.AddColumn(new TableColumn("DLQ Source").Centered());
-
-        foreach (var message in dlqMessages)
-        {
-            queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
-        }
-
-        AnsiConsole.Write(queueTable);
+        
+        return 0;
     }
 }

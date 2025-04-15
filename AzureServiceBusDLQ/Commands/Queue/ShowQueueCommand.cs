@@ -44,7 +44,7 @@ public class ShowQueueCommand(QueueOperations queueOperations) : CancellableAsyn
 
                     dlqProgress.StopTask();
 
-                    ShowDLQMessages(queue, dlqMessages);
+                    DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.DeadLetter, dlqMessages);
                 }
 
                 if (queue.TransferDeadLetterMessageCount > 0)
@@ -55,30 +55,10 @@ public class ShowQueueCommand(QueueOperations queueOperations) : CancellableAsyn
 
                     tDlqProgress.StopTask();
 
-                    ShowDLQMessages(queue, tDlqMessages);
+                    DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.TransferDeadLetter, tDlqMessages);
                 }
             });
 
         return dlqMessagesExists ? 1 : 0;
-    }
-
-    static void ShowDLQMessages(QueueRuntimeProperties queue, List<ServiceBusReceivedMessage> dlqMessages)
-    {
-        var queueTable = new Table
-        {
-            Title = new TableTitle($"DLQ Messages in {queue.Name} ({dlqMessages.Count})")
-        };
-
-        queueTable.AddColumn("MessageId");
-        queueTable.AddColumn(new TableColumn("DLQ Reason").Centered());
-        queueTable.AddColumn(new TableColumn("DLQ Description").Centered());
-        queueTable.AddColumn(new TableColumn("DLQ Source").Centered());
-
-        foreach (var message in dlqMessages)
-        {
-            queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
-        }
-
-        AnsiConsole.Write(queueTable);
     }
 }
