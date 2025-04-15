@@ -33,7 +33,7 @@ public class RetryQueueTests : CommandTestFixture
         await CreateQueueWithDLQMessage(TestQueueName, testMessage);
         var result = await ExecuteCommand($"retry-queue {TestQueueName}");
 
-        Assert.That(result.ExitCode, Is.Not.Zero);
+        Assert.That(result.ExitCode, Is.Zero);
 
         await using var receiver = ServiceBusClient.CreateReceiver(TestQueueName);
 
