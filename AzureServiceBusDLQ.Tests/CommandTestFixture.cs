@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Transactions;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using NUnit.Framework;
@@ -22,13 +23,12 @@ public class CommandTestFixture
                 .Replace("/", "");
         }
     }
-
-
+    
     [SetUp]
     public async Task Setup()
     {
         AdministrationClient = new ServiceBusAdministrationClient(ConnectionString);
-        ServiceBusClient = new ServiceBusClient(ConnectionString);
+        ServiceBusClient = new ServiceBusClient(ConnectionString, new ServiceBusClientOptions { EnableCrossEntityTransactions = true });
 
         testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
 
@@ -110,6 +110,34 @@ public class CommandTestFixture
         await receiver.DeadLetterMessageAsync(receivedMessage, "Some reason", "Some description", TestTimeoutCancellationToken);
     }
 
+    protected async Task CreateQueueWithTDLQMessage(string queueName)
+    {
+        var targetQueueName = queueName + "-via";
+        await CreateQueue(queueName);
+        await CreateQueue(targetQueueName);
+
+        await using var seedMessageSender = ServiceBusClient.CreateSender(queueName);
+
+        await seedMessageSender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
+
+        await using var receiver = ServiceBusClient.CreateReceiver(queueName);
+        await using var sendViaSender = ServiceBusClient.CreateSender(targetQueueName);
+
+        var message = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
+
+        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+        
+        await sendViaSender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
+
+        QueueProperties targetQueueProperties = await AdministrationClient.GetQueueAsync(targetQueueName, TestTimeoutCancellationToken);
+        targetQueueProperties.Status = EntityStatus.Disabled;
+        await AdministrationClient.UpdateQueueAsync(targetQueueProperties, TestTimeoutCancellationToken);
+
+        await receiver.CompleteMessageAsync(message, TestTimeoutCancellationToken);
+       
+        scope.Complete();
+    }
+
     async Task DeleteQueue(string queueName)
     {
         try
@@ -120,8 +148,7 @@ public class CommandTestFixture
         {
         }
     }
-
-
+    
     protected async Task ClearAllTestQueues()
     {
         await foreach (var queue in AdministrationClient.GetQueuesRuntimePropertiesAsync(TestTimeoutCancellationToken))
@@ -132,18 +159,7 @@ public class CommandTestFixture
             }
         }
     }
-
-    async Task DeleteTopic(string topicName)
-    {
-        try
-        {
-            await AdministrationClient.DeleteTopicAsync(topicName);
-        }
-        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
-        {
-        }
-    }
-
+    
     CancellationTokenSource testCancellationTokenSource;
 
     const string TestQueueNamePrefix = "asq-dlq-test";

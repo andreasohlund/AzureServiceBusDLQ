@@ -28,7 +28,9 @@ public static class AzureClientFactoryExtensions
                 throw new InvalidOperationException("All commands must use BaseSettings");
             }
 
-            return settings.Namespace is null ? new ServiceBusClient(settings.ConnectionString) : new ServiceBusClient(settings.Namespace, new DefaultAzureCredential());
+            var options = new ServiceBusClientOptions { EnableCrossEntityTransactions = true };
+
+            return settings.Namespace is null ? new ServiceBusClient(settings.ConnectionString, options) : new ServiceBusClient(settings.Namespace, new DefaultAzureCredential(), options);
         });
         serviceCollection.AddSingleton<QueueOperations>();
     }
