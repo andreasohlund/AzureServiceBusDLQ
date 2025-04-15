@@ -31,4 +31,14 @@ public class ShowQueueTests : CommandTestFixture
         Assert.That(result.ExitCode, Is.Not.Zero);
         Assert.That(result.Output, Contains.Substring(TestQueueName));
     }
+    
+    [Test]
+    public async Task ListTDLQMessageDetailsWhenMessagesExistsInTDLQ()
+    {
+        await CreateQueueWithTDLQMessage(TestQueueName);
+        var result = await ExecuteCommand($"queue {TestQueueName}");
+
+        Assert.That(result.ExitCode, Is.Not.Zero);
+        Assert.That(result.Output, Contains.Substring(TestQueueName));
+    }
 }
