@@ -146,8 +146,7 @@ public class CommandTestFixture
         {
         }
     }
-
-
+    
     protected async Task ClearAllTestQueues()
     {
         await foreach (var queue in AdministrationClient.GetQueuesRuntimePropertiesAsync(TestTimeoutCancellationToken))
@@ -158,18 +157,7 @@ public class CommandTestFixture
             }
         }
     }
-
-    async Task DeleteTopic(string topicName)
-    {
-        try
-        {
-            await AdministrationClient.DeleteTopicAsync(topicName);
-        }
-        catch (ServiceBusException ex) when (ex.Reason == ServiceBusFailureReason.MessagingEntityNotFound)
-        {
-        }
-    }
-
+    
     CancellationTokenSource testCancellationTokenSource;
 
     const string TestQueueNamePrefix = "asq-dlq-test";
