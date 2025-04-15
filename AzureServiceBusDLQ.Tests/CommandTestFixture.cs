@@ -97,6 +97,11 @@ public class CommandTestFixture
     {
         await CreateQueue(queueName);
 
+        await AddDLQMessage(queueName, message);
+    }
+    
+    protected async Task AddDLQMessage(string queueName, ServiceBusMessage? message = null)
+    {
         await using var sender = ServiceBusClient.CreateSender(queueName);
         
         message ??= new ServiceBusMessage();
