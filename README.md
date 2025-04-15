@@ -50,7 +50,7 @@ Outputs:
 Retries DLQ messages by moving them back to the parent queue.
 
 > [!NOTE]  
-> [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that the retry is atomic.
+> [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that retries are atomic.
 
 In this example using the namespace name:
 
