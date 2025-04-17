@@ -64,3 +64,27 @@ Outputs:
 
 - `0` if messages where retried successfully or if no DLQ messages where found.
 - `1` if DLQ messages failed to be retried
+
+## Move DLQ messages
+
+Moves DLQ messages to the target queue
+
+> [!NOTE]  
+> [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that the move is atomic.
+
+Move single queue:
+
+`asb-dlq move-dlq my-queue my-dlq-target -n my-asb-namespace`
+
+Move DLQ messages in all queues:
+
+`asb-dlq move-all-dlq-messages my-dlq-target -n my-asb-namespace`
+
+Outputs:
+
+- Message details for moved messages.
+
+- Returns:
+
+- `0` if messages where moved successfully or if no DLQ messages where found.
+- `1` if DLQ messages failed to be moved
