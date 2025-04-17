@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0
+
+- Support moving DLQ messages to a central queue
+
 ## 1.0.0-alpha.4
 
 - Support retries of DLQ messages back to its parent queue
