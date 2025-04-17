@@ -19,6 +19,7 @@ app.Configure(config =>
     config.AddCommand<QueuesStatusCommand>("queues");
     config.AddCommand<ShowQueueCommand>("queue");
     config.AddCommand<RetryQueueCommand>("retry-queue");
+    config.AddCommand<MoveQueueCommand>("move-dlq-messages");
     config.AddCommand<SubscriptionsStatusCommand>("subscriptions");
 });
 

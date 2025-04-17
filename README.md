@@ -74,7 +74,7 @@ Moves DLQ messages to the target queue
 
 Move single queue:
 
-`asb-dlq move-dlq my-queue my-dlq-target -n my-asb-namespace`
+`asb-dlq move-dlq-messages my-queue my-dlq-target -n my-asb-namespace`
 
 Move DLQ messages in all queues:
 

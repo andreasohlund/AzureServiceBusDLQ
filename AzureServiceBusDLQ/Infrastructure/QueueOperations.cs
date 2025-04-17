@@ -60,10 +60,15 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
         return dlqMessages;
     }
 
-    public async Task<List<ServiceBusReceivedMessage>> RetryDeadLetterMessages(QueueRuntimeProperties queue, ProgressTask progress, CancellationToken cancellationToken)
+    public Task<List<ServiceBusReceivedMessage>> RetryDeadLetterMessages(QueueRuntimeProperties queue, ProgressTask progress, CancellationToken cancellationToken)
     {
-        await using var receiver = serviceBusClient.CreateReceiver(queue.Name, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
-        await using var sender = serviceBusClient.CreateSender(queue.Name);
+        return MoveDeadLetterMessages(queue.Name, queue.Name, progress, cancellationToken);
+    }
+
+    public async Task<List<ServiceBusReceivedMessage>> MoveDeadLetterMessages(string sourceQueue, string targetQueue, ProgressTask progress, CancellationToken cancellationToken)
+    {
+        await using var receiver = serviceBusClient.CreateReceiver(sourceQueue, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
+        await using var sender = serviceBusClient.CreateSender(targetQueue);
 
         var dlqMessages = new List<ServiceBusReceivedMessage>();
 

@@ -28,7 +28,7 @@ public class CommandTestFixture
     public async Task Setup()
     {
         AdministrationClient = new ServiceBusAdministrationClient(ConnectionString);
-        ServiceBusClient = new ServiceBusClient(ConnectionString, new ServiceBusClientOptions { EnableCrossEntityTransactions = true });
+        ServiceBusClient = new ServiceBusClient(ConnectionString);
 
         testCancellationTokenSource = Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(TestTimeout);
 
