@@ -2,7 +2,7 @@
 
 ## Installing
 
-`dotnet tool install AzureServiceBusDLQ --global --prerelease`
+`dotnet tool install AzureServiceBusDLQ --global`
 
 ## Connecting
 
