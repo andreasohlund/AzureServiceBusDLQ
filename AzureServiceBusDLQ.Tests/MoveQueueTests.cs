@@ -2,6 +2,7 @@ using Azure.Messaging.ServiceBus;
 using AzureServiceBusDLQ.Infrastructure;
 using Microsoft.Azure.Amqp.Framing;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 [TestFixture]
 public class MoveQueueTests : CommandTestFixture
@@ -59,7 +60,7 @@ public class MoveQueueTests : CommandTestFixture
         };
 
         await AddDLQMessage(TestQueueName, testMessage2);
-        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} --transform {transformationVerification.OptionKey}");
+        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} -t {transformationVerification.OptionKey}");
 
         Assert.That(result.ExitCode, Is.Zero);
 
@@ -85,7 +86,7 @@ public class MoveQueueTests : CommandTestFixture
     
     public static IEnumerable<TestCaseData> TransformationVerifications()
     {
-        return [new TestCaseData(new DefaultTransformationVerification()),new TestCaseData(new NServiceBusTransformationVerification())];
+        return [new TestCaseData(new DefaultTransformationVerification()),new TestCaseData(new NoneTransformationVerification()),new TestCaseData(new NServiceBusTransformationVerification())];
     }
     
     public abstract class TransformationVerification
@@ -104,6 +105,16 @@ public class MoveQueueTests : CommandTestFixture
         }
 
         public override string OptionKey => "default";
+    }
+    
+    class NoneTransformationVerification : TransformationVerification
+    {
+        public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
+        {
+           CollectionAssert.AreEquivalent(movedMessage.ApplicationProperties, message.ApplicationProperties);
+        }
+
+        public override string OptionKey => "none";
     }
 
     class NServiceBusTransformationVerification : TransformationVerification

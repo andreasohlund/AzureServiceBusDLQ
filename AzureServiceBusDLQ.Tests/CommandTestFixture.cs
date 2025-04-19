@@ -125,8 +125,13 @@ public class CommandTestFixture
 
         await seedMessageSender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
 
-        await using var receiver = ServiceBusClient.CreateReceiver(queueName);
-        await using var sendViaSender = ServiceBusClient.CreateSender(targetQueueName);
+        var transactionalClient = new ServiceBusClient(ConnectionString, new ServiceBusClientOptions
+        {
+            EnableCrossEntityTransactions = true
+        });
+        
+        await using var receiver = transactionalClient.CreateReceiver(queueName);
+        await using var sendViaSender = transactionalClient.CreateSender(targetQueueName);
 
         var message = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
 

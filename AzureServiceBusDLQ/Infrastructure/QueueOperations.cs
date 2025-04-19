@@ -62,10 +62,10 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
 
     public Task<List<ServiceBusReceivedMessage>> RetryDeadLetterMessages(QueueRuntimeProperties queue, ProgressTask progress, CancellationToken cancellationToken)
     {
-        return MoveDeadLetterMessages(queue.Name, queue.Name, progress, cancellationToken);
+        return MoveDeadLetterMessages(queue.Name, queue.Name, null, progress, cancellationToken);
     }
 
-    public async Task<List<ServiceBusReceivedMessage>> MoveDeadLetterMessages(string sourceQueue, string targetQueue, ProgressTask progress, CancellationToken cancellationToken)
+    public async Task<List<ServiceBusReceivedMessage>> MoveDeadLetterMessages(string sourceQueue, string targetQueue, Transformation? transformation, ProgressTask progress, CancellationToken cancellationToken)
     {
         await using var receiver = serviceBusClient.CreateReceiver(sourceQueue, new ServiceBusReceiverOptions { SubQueue = SubQueue.DeadLetter });
         await using var sender = serviceBusClient.CreateSender(targetQueue);
@@ -85,6 +85,8 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
             {
                 var messageToRetry = new ServiceBusMessage(dlqMessage);
 
+                transformation?.Transform(sourceQueue, dlqMessage, messageToRetry);
+
                 await sender.SendMessageAsync(messageToRetry, cancellationToken);
 
                 await receiver.CompleteMessageAsync(dlqMessage, cancellationToken);
@@ -96,5 +98,10 @@ public class QueueOperations(ServiceBusAdministrationClient administrationClient
         }
 
         return dlqMessages;
+    }
+
+    public abstract class Transformation
+    {
+        public abstract void Transform(string sourceQueue, ServiceBusReceivedMessage dlqMessage, ServiceBusMessage message);
     }
 }
