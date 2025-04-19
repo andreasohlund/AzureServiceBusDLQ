@@ -2,7 +2,7 @@
 
 ## Packing
 
-Each build will `dotnet pack` the tool into the `/nupkg` folder.
+A relebuild will `dotnet pack` the tool into the `/nupkg` folder.
 
 ## Running tests
 

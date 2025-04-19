@@ -2,7 +2,7 @@
 
 ## 1.0.0
 
-- Support moving DLQ messages to a central queue
+- Support moving DLQ messages to a central queue with customizable transformations.
 
 ## 1.0.0-alpha.4
 
