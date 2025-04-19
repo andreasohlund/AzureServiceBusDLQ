@@ -2,7 +2,6 @@ namespace AzureServiceBusDLQ.Infrastructure;
 
 public class NServiceBus
 {
-    
     public static class Headers
     {
         public const string FailedQ = "NServiceBus.FailedQ";
@@ -11,9 +10,7 @@ public class NServiceBus
         public const string Source = $"{ExceptionInfoPrefix}Source";
         public const string StackTrace = $"{ExceptionInfoPrefix}StackTrace";
         public const string TimeOfFailure = "NServiceBus.TimeOfFailure";
+
         const string ExceptionInfoPrefix = "NServiceBus.ExceptionInfo.";
     }
 }
-
-
-

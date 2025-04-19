@@ -72,9 +72,13 @@ Moves DLQ messages to the target queue
 > [!NOTE]  
 > [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that the move is atomic.
 
-Move single queue:
+Move single queue with default transformation (see below):
 
 `asb-dlq move-dlq-messages my-source-queue my-target-queue -n my-asb-namespace`
+
+Use NServiceBus transformation:
+
+`asb-dlq move-dlq-messages my-source-queue my-target-queue --transform nservicebus -n my-asb-namespace`
 
 Outputs:
 
@@ -84,3 +88,19 @@ Outputs:
 
 - `0` if messages where moved successfully or if no DLQ messages where found.
 - `1` if DLQ messages failed to be moved
+
+### Transforms
+
+The move operation will capture metadata about the DLQ message as application properties. The following transformations are available.
+
+#### Default
+
+- `x-asb-dlq-source-queue`: Queue name where the message was dead lettered
+- `x-asb-dlq-reason`: Dead letter reason
+- `x-asb-dlq-description`: Dead letter description
+
+#### NServiceBus
+
+- `NServiceBus.FailedQ`: Queue name where the message was dead lettered
+- `NServiceBus.ExceptionInfo.ExceptionType`: Dead letter reason
+- `NServiceBus.ExceptionInfo.Message`: Dead letter description

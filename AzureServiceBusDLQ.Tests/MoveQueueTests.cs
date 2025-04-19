@@ -59,7 +59,7 @@ public class MoveQueueTests : CommandTestFixture
         };
 
         await AddDLQMessage(TestQueueName, testMessage2);
-        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName}");
+        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} --transform {transformationVerification.OptionKey}");
 
         Assert.That(result.ExitCode, Is.Zero);
 
@@ -91,6 +91,7 @@ public class MoveQueueTests : CommandTestFixture
     public abstract class TransformationVerification
     {
         public abstract void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage);
+        public abstract string OptionKey { get; }
     }
 
     class DefaultTransformationVerification : TransformationVerification
@@ -101,6 +102,8 @@ public class MoveQueueTests : CommandTestFixture
             Assert.That(movedMessage.ApplicationProperties["x-asb-dlq-reason"], Is.EqualTo("Some reason"));
             Assert.That(movedMessage.ApplicationProperties["x-asb-dlq-description"], Is.EqualTo("Some description"));
         }
+
+        public override string OptionKey => "default";
     }
 
     class NServiceBusTransformationVerification : TransformationVerification
@@ -111,5 +114,7 @@ public class MoveQueueTests : CommandTestFixture
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ExceptionType], Is.EqualTo("Some reason"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.Message], Is.EqualTo("Some description"));
         }
+
+        public override string OptionKey => "nservicebus";
     }
 }
