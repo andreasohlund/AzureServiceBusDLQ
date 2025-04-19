@@ -91,9 +91,11 @@ Outputs:
 
 ### Transforms
 
-The move operation will capture metadata about the DLQ message as application properties. The following transformations are available.
+The move operation will capture metadata about the DLQ message via transformations. The following transformations are available.
 
 #### Default
+
+Adds the following application properties to the moved message:
 
 - `x-asb-dlq-source-queue`: Queue name where the message was dead lettered
 - `x-asb-dlq-reason`: Dead letter reason
@@ -101,6 +103,12 @@ The move operation will capture metadata about the DLQ message as application pr
 
 #### NServiceBus
 
+Adds the following application properties to the moved message:
+
 - `NServiceBus.FailedQ`: Queue name where the message was dead lettered
 - `NServiceBus.ExceptionInfo.ExceptionType`: Dead letter reason
 - `NServiceBus.ExceptionInfo.Message`: Dead letter description
+
+#### None
+
+No modifications are done to the moved message.
