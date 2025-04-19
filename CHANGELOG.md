@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.0.1
+
+- Set NServiceBus.MessageId when NServiceBus transformation is used
+
 ## 1.0.0
 
-- Support moving DLQ messages to a central queue with customizable transformations.
+- Support moving DLQ messages to a central queue with customizable transformations
 
 ## 1.0.0-alpha.4
 
