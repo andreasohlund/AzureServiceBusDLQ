@@ -1,4 +1,5 @@
 using Azure.Messaging.ServiceBus;
+using AzureServiceBusDLQ.Infrastructure;
 using Microsoft.Azure.Amqp.Framing;
 using NUnit.Framework;
 
@@ -39,8 +40,8 @@ public class MoveQueueTests : CommandTestFixture
     }
 
     [Test]
-    [TestCaseSource(nameof(MessagingFrameworkVerifications))]
-    public async Task MoveDLQMessagesInQueue(MessagingFrameworkVerification messagingFrameworkVerification)
+    [TestCaseSource(nameof(TransformationVerifications))]
+    public async Task MoveDLQMessagesInQueue(TransformationVerification transformationVerification)
     {
         var targetName = TestQueueName + "-target";
         await CreateQueue(targetName);
@@ -49,8 +50,6 @@ public class MoveQueueTests : CommandTestFixture
         {
             MessageId = Guid.NewGuid().ToString(),
         };
-
-        messagingFrameworkVerification.TransformTestMessage(testMessage1);
         
         await CreateQueueWithDLQMessage(TestQueueName, testMessage1);
 
@@ -58,8 +57,6 @@ public class MoveQueueTests : CommandTestFixture
         {
             MessageId = Guid.NewGuid().ToString(),
         };
-
-        messagingFrameworkVerification.TransformTestMessage(testMessage2);
 
         await AddDLQMessage(TestQueueName, testMessage2);
         var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName}");
@@ -78,48 +75,41 @@ public class MoveQueueTests : CommandTestFixture
         Assert.That(retriedMessage1.DeadLetterErrorDescription, Is.Null);
         Assert.That(retriedMessage1.DeadLetterSource, Is.Null);
 
-        messagingFrameworkVerification.AssertMovedMessage(testMessage1, retriedMessage1);
+        transformationVerification.AssertMovedMessage(TestQueueName, testMessage1, retriedMessage1);
 
         var retriedMessage2 = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
 
         Assert.That(retriedMessage2.MessageId, Is.EqualTo(retriedMessage2.MessageId));
-        messagingFrameworkVerification.AssertMovedMessage(testMessage2, retriedMessage2);
+        transformationVerification.AssertMovedMessage(TestQueueName, testMessage2, retriedMessage2);
+    }
+    
+    public static IEnumerable<TestCaseData> TransformationVerifications()
+    {
+        return [new TestCaseData(new DefaultTransformationVerification()),new TestCaseData(new NServiceBusTransformationVerification())];
+    }
+    
+    public abstract class TransformationVerification
+    {
+        public abstract void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage);
     }
 
-
-    public static IEnumerable<TestCaseData> MessagingFrameworkVerifications()
+    class DefaultTransformationVerification : TransformationVerification
     {
-        return [new TestCaseData(new UnknownFrameworkVerification()),new TestCaseData(new NServiceBusVerification())];
-    }
-}
-
-public abstract class MessagingFrameworkVerification
-{
-    public abstract void TransformTestMessage(ServiceBusMessage message);
-
-    public abstract void AssertMovedMessage(ServiceBusMessage message, ServiceBusReceivedMessage movedMessage);
-}
-
-public class UnknownFrameworkVerification : MessagingFrameworkVerification
-{
-    public override void TransformTestMessage(ServiceBusMessage message)
-    {
+        public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
+        {
+            Assert.That(movedMessage.ApplicationProperties["x-asb-dlq-source-queue"], Is.EqualTo(sourceQueue));
+            Assert.That(movedMessage.ApplicationProperties["x-asb-dlq-reason"], Is.EqualTo("Some reason"));
+            Assert.That(movedMessage.ApplicationProperties["x-asb-dlq-description"], Is.EqualTo("Some description"));
+        }
     }
 
-    public override void AssertMovedMessage(ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
+    class NServiceBusTransformationVerification : TransformationVerification
     {
-        
-    }
-}
-
-public class NServiceBusVerification : MessagingFrameworkVerification
-{
-    public override void TransformTestMessage(ServiceBusMessage message)
-    {
-    }
-
-    public override void AssertMovedMessage(ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
-    {
-        
+        public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
+        {
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.FailedQ], Is.EqualTo(sourceQueue));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ExceptionType], Is.EqualTo("Some reason"));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.Message], Is.EqualTo("Some description"));
+        }
     }
 }
