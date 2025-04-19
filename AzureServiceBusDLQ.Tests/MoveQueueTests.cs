@@ -1,6 +1,4 @@
 using Azure.Messaging.ServiceBus;
-using AzureServiceBusDLQ.Infrastructure;
-using Microsoft.Azure.Amqp.Framing;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 
@@ -51,6 +49,8 @@ public class MoveQueueTests : CommandTestFixture
         {
             MessageId = Guid.NewGuid().ToString(),
         };
+
+        transformationVerification.AdjustMessage(testMessage1);
         
         await CreateQueueWithDLQMessage(TestQueueName, testMessage1);
 
@@ -59,6 +59,8 @@ public class MoveQueueTests : CommandTestFixture
             MessageId = Guid.NewGuid().ToString(),
         };
 
+        transformationVerification.AdjustMessage(testMessage2);
+        
         await AddDLQMessage(TestQueueName, testMessage2);
         var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} -t {transformationVerification.OptionKey}");
 
@@ -93,6 +95,10 @@ public class MoveQueueTests : CommandTestFixture
     {
         public abstract void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage);
         public abstract string OptionKey { get; }
+
+        public virtual void AdjustMessage(ServiceBusMessage message)
+        {
+        }
     }
 
     class DefaultTransformationVerification : TransformationVerification
@@ -119,11 +125,17 @@ public class MoveQueueTests : CommandTestFixture
 
     class NServiceBusTransformationVerification : TransformationVerification
     {
+        public override void AdjustMessage(ServiceBusMessage message)
+        {
+            message.ApplicationProperties[NServiceBus.Headers.MessageId] = message.MessageId;
+        }
+
         public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
         {
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.FailedQ], Is.EqualTo(sourceQueue));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ExceptionType], Is.EqualTo("Some reason"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.Message], Is.EqualTo("Some description"));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.MessageId], Is.EqualTo(message.MessageId));
         }
 
         public override string OptionKey => "nservicebus";

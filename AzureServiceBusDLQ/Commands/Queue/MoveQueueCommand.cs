@@ -1,7 +1,5 @@
 using System.ComponentModel;
 using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
-using AzureServiceBusDLQ.Infrastructure;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -93,6 +91,11 @@ public class MoveQueueCommand(QueueOperations queueOperations) : CancellableAsyn
             message.ApplicationProperties[NServiceBus.Headers.FailedQ] = sourceQueue;
             message.ApplicationProperties[NServiceBus.Headers.ExceptionType] = dlqMessage.DeadLetterReason;
             message.ApplicationProperties[NServiceBus.Headers.Message] = dlqMessage.DeadLetterErrorDescription;
+
+            if (!message.ApplicationProperties.ContainsKey(NServiceBus.Headers.MessageId))
+            {
+                message.ApplicationProperties[NServiceBus.Headers.MessageId] = message.MessageId;
+            }
         }
     }
 }

@@ -1,5 +1,3 @@
-namespace AzureServiceBusDLQ.Infrastructure;
-
 public class NServiceBus
 {
     public static class Headers
@@ -10,6 +8,7 @@ public class NServiceBus
         public const string Source = $"{ExceptionInfoPrefix}Source";
         public const string StackTrace = $"{ExceptionInfoPrefix}StackTrace";
         public const string TimeOfFailure = "NServiceBus.TimeOfFailure";
+        public const string MessageId = "NServiceBus.MessageId";
 
         const string ExceptionInfoPrefix = "NServiceBus.ExceptionInfo.";
     }
