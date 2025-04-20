@@ -2,7 +2,13 @@
 
 ## Packing
 
-A relebuild will `dotnet pack` the tool into the `/nupkg` folder.
+Building the project  will `dotnet pack` the tool into the `/nupkg` folder.
+
+## Installing a dev build
+
+Run the following command from the project root to install the latest build:
+
+`dotnet tool install AzureServiceBusDLQ --global --prerelease --add-source ./nupkg`
 
 ## Running tests
 

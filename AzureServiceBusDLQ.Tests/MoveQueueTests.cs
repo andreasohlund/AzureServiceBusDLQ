@@ -1,3 +1,4 @@
+using System.Text;
 using Azure.Messaging.ServiceBus;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -51,7 +52,7 @@ public class MoveQueueTests : CommandTestFixture
         };
 
         transformationVerification.AdjustMessage(testMessage1);
-        
+
         await CreateQueueWithDLQMessage(TestQueueName, testMessage1);
 
         var testMessage2 = new ServiceBusMessage
@@ -60,7 +61,7 @@ public class MoveQueueTests : CommandTestFixture
         };
 
         transformationVerification.AdjustMessage(testMessage2);
-        
+
         await AddDLQMessage(TestQueueName, testMessage2);
         var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} -t {transformationVerification.OptionKey}");
 
@@ -85,12 +86,12 @@ public class MoveQueueTests : CommandTestFixture
         Assert.That(retriedMessage2.MessageId, Is.EqualTo(retriedMessage2.MessageId));
         transformationVerification.AssertMovedMessage(TestQueueName, testMessage2, retriedMessage2);
     }
-    
+
     public static IEnumerable<TestCaseData> TransformationVerifications()
     {
-        return [new TestCaseData(new DefaultTransformationVerification()),new TestCaseData(new NoneTransformationVerification()),new TestCaseData(new NServiceBusTransformationVerification())];
+        return [new TestCaseData(new DefaultTransformationVerification()), new TestCaseData(new NoneTransformationVerification()), new TestCaseData(new NServiceBusTransformationVerification())];
     }
-    
+
     public abstract class TransformationVerification
     {
         public abstract void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage);
@@ -112,12 +113,12 @@ public class MoveQueueTests : CommandTestFixture
 
         public override string OptionKey => "default";
     }
-    
+
     class NoneTransformationVerification : TransformationVerification
     {
         public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
         {
-           CollectionAssert.AreEquivalent(movedMessage.ApplicationProperties, message.ApplicationProperties);
+            CollectionAssert.AreEquivalent(movedMessage.ApplicationProperties, message.ApplicationProperties);
         }
 
         public override string OptionKey => "none";
@@ -133,9 +134,11 @@ public class MoveQueueTests : CommandTestFixture
         public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
         {
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.FailedQ], Is.EqualTo(sourceQueue));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ProcessingEndpoint], Is.EqualTo(sourceQueue));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ExceptionType], Is.EqualTo("Some reason"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.Message], Is.EqualTo("Some description"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.MessageId], Is.EqualTo(message.MessageId));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.TimeOfFailure], Is.Not.Null);
         }
 
         public override string OptionKey => "nservicebus";

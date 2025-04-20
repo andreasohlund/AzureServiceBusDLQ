@@ -104,7 +104,7 @@ public class CommandTestFixture
     {
         await using var sender = ServiceBusClient.CreateSender(queueName);
         
-        message ??= new ServiceBusMessage();
+        message ??= new ServiceBusMessage(BinaryData.FromObjectAsJson(new { MyProperty = "Some value" }));
 
         await sender.SendMessageAsync(message, TestTimeoutCancellationToken);
 

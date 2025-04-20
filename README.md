@@ -106,6 +106,8 @@ Adds the following application properties to the moved message:
 Adds the following application properties to the moved message:
 
 - `NServiceBus.FailedQ`: Queue name where the message was dead lettered
+- `NServiceBus.ProcessingEndpoint`: Queue name where the message was dead lettered
+- `NServiceBus.TimeOfFailure`: Time when the message was dead lettered. NOTE: For now this is set to utc now.
 - `NServiceBus.ExceptionInfo.ExceptionType`: Dead letter reason
 - `NServiceBus.ExceptionInfo.Message`: Dead letter description
 - `NServiceBus.MessageId`: Unless already present the native Azure ServiceBus message id will be used as the message id
