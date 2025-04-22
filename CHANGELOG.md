@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Set NServiceBus.ProcessingMachine to `unknown` when NServiceBus transformation is used
+
 ## 1.0.1
 
 - Set NServiceBus.MessageId when NServiceBus transformation is used
