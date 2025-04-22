@@ -90,13 +90,10 @@ public class MoveQueueCommand(QueueOperations queueOperations) : CancellableAsyn
         public override void Transform(string sourceQueue, ServiceBusReceivedMessage dlqMessage, ServiceBusMessage message)
         {
             message.ApplicationProperties[NServiceBus.Headers.FailedQ] = sourceQueue;
-            message.ApplicationProperties[NServiceBus.Headers.ProcessingEndpoint] = sourceQueue;
+            message.ApplicationProperties[NServiceBus.Headers.ProcessingMachine] = "unknown";
             message.ApplicationProperties[NServiceBus.Headers.ExceptionType] = dlqMessage.DeadLetterReason;
             message.ApplicationProperties[NServiceBus.Headers.Message] = dlqMessage.DeadLetterErrorDescription;
             
-            // Using utc now is the best things we can do since the Particular Platform requires a date time and there isn't one available on the service bus message
-            message.ApplicationProperties[NServiceBus.Headers.TimeOfFailure] = DateTimeOffset.UtcNow.ToString(NServiceBus.NServiceBusDateTimeFormat, CultureInfo.InvariantCulture);
-
             if (!message.ApplicationProperties.ContainsKey(NServiceBus.Headers.MessageId))
             {
                 message.ApplicationProperties[NServiceBus.Headers.MessageId] = message.MessageId;

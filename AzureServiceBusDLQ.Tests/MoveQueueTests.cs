@@ -134,11 +134,10 @@ public class MoveQueueTests : CommandTestFixture
         public override void AssertMovedMessage(string sourceQueue, ServiceBusMessage message, ServiceBusReceivedMessage movedMessage)
         {
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.FailedQ], Is.EqualTo(sourceQueue));
-            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ProcessingEndpoint], Is.EqualTo(sourceQueue));
+            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ProcessingMachine], Is.EqualTo("unknown"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.ExceptionType], Is.EqualTo("Some reason"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.Message], Is.EqualTo("Some description"));
             Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.MessageId], Is.EqualTo(message.MessageId));
-            Assert.That(movedMessage.ApplicationProperties[NServiceBus.Headers.TimeOfFailure], Is.Not.Null);
         }
 
         public override string OptionKey => "nservicebus";
