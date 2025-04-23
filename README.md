@@ -67,7 +67,7 @@ Outputs:
 
 ## Move DLQ messages
 
-Moves DLQ messages to the target queue
+Moves DLQ messages to the target queue.
 
 > [!NOTE]  
 > [Transactions](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-transactions) are used to ensure that the move is atomic.
@@ -76,7 +76,7 @@ Move single queue with default transformation (see below):
 
 `asb-dlq move-dlq-messages my-source-queue my-target-queue -n my-asb-namespace`
 
-Use NServiceBus transformation:
+Using NServiceBus transformation:
 
 `asb-dlq move-dlq-messages my-source-queue my-target-queue --transform nservicebus -n my-asb-namespace`
 
@@ -84,7 +84,7 @@ Outputs:
 
 - Message details for moved messages.
 
-- Returns:
+Returns:
 
 - `0` if messages where moved successfully or if no DLQ messages where found.
 - `1` if DLQ messages failed to be moved
@@ -110,6 +110,9 @@ Adds the following application properties to the moved message:
 - `NServiceBus.ExceptionInfo.ExceptionType`: Dead letter reason
 - `NServiceBus.ExceptionInfo.Message`: Dead letter description
 - `NServiceBus.MessageId`: Unless already present the native Azure ServiceBus message id will be used as the message id
+
+> [!NOTE]  
+> [Microsoft recommends](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues#application-level-dead-lettering) to, where possible, include the exception type in the DLQ reason and stacktrace in the DLQ description.
 
 #### None
 
