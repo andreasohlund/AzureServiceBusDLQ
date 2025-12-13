@@ -12,7 +12,7 @@ public class MoveQueueTests : CommandTestFixture
         var targetName = TestQueueName + "-target";
         await CreateQueue(TestQueueName);
 
-        var result = await ExecuteCommand($"move-dlq-messages source-queue {targetName}");
+        var result = await ExecuteCommand("move-dlq-messages", "source-queue", targetName);
 
         Assert.That(result.ExitCode, Is.Not.Zero);
     }
@@ -21,8 +21,8 @@ public class MoveQueueTests : CommandTestFixture
     public async Task ThrowsIfTargetQueueDoesNotExist()
     {
         await CreateQueue(TestQueueName);
-
-        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} target-queue");
+        
+        var result = await ExecuteCommand("move-dlq-messages", TestQueueName, "target-queue");
 
         Assert.That(result.ExitCode, Is.Not.Zero);
     }
@@ -34,7 +34,7 @@ public class MoveQueueTests : CommandTestFixture
         await CreateQueue(TestQueueName);
         await CreateQueue(targetName);
 
-        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName}");
+        var result = await ExecuteCommand("move-dlq-messages", TestQueueName, targetName);
 
         Assert.That(result.ExitCode, Is.Zero);
     }
@@ -63,7 +63,7 @@ public class MoveQueueTests : CommandTestFixture
         transformationVerification.AdjustMessage(testMessage2);
 
         await AddDLQMessage(TestQueueName, testMessage2);
-        var result = await ExecuteCommand($"move-dlq-messages {TestQueueName} {targetName} -t {transformationVerification.OptionKey}");
+        var result = await ExecuteCommand("move-dlq-messages", TestQueueName, targetName, "-t", transformationVerification.OptionKey);
 
         Assert.That(result.ExitCode, Is.Zero);
 

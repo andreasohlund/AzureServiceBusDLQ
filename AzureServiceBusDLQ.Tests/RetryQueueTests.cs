@@ -8,7 +8,7 @@ public class RetryQueueTests : CommandTestFixture
     [Test]
     public async Task ThrowsIfQueueDoesNotExist()
     {
-        var result = await ExecuteCommand($"retry-queue does-not-exist");
+        var result = await ExecuteCommand("retry-queue", "does-not-exist");
 
         Assert.That(result.ExitCode, Is.Not.Zero);
     }
@@ -18,7 +18,7 @@ public class RetryQueueTests : CommandTestFixture
     {
         await CreateQueue(TestQueueName);
 
-        var result = await ExecuteCommand($"retry-queue {TestQueueName}");
+        var result = await ExecuteCommand("retry-queue", TestQueueName);
 
         Assert.That(result.ExitCode, Is.Zero);
     }
@@ -39,7 +39,7 @@ public class RetryQueueTests : CommandTestFixture
         };
 
         await AddDLQMessage(TestQueueName, testMessage2);
-        var result = await ExecuteCommand($"retry-queue {TestQueueName}");
+        var result = await ExecuteCommand("retry-queue", TestQueueName);
 
         Assert.That(result.ExitCode, Is.Zero);
 

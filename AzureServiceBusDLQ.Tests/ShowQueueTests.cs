@@ -7,7 +7,7 @@ public class ShowQueueTests : CommandTestFixture
     [Test]
     public async Task ThrowsIfQueueDoesNotExist()
     {
-        var result = await ExecuteCommand($"queue does-not-exist");
+        var result = await ExecuteCommand("queue does-not-exist");
 
         Assert.That(result.ExitCode, Is.Not.Zero);
     }
@@ -17,7 +17,7 @@ public class ShowQueueTests : CommandTestFixture
     {
         await CreateQueue(TestQueueName);
 
-        var result = await ExecuteCommand($"queue {TestQueueName}");
+        var result = await ExecuteCommand("queue", TestQueueName);
 
         Assert.That(result.ExitCode, Is.Zero);
     }
@@ -26,17 +26,17 @@ public class ShowQueueTests : CommandTestFixture
     public async Task ListDLQMessageDetailsWhenMessagesExistsInDLQ()
     {
         await CreateQueueWithDLQMessage(TestQueueName);
-        var result = await ExecuteCommand($"queue {TestQueueName}");
+        var result = await ExecuteCommand("queue", TestQueueName);
 
         Assert.That(result.ExitCode, Is.Not.Zero);
         Assert.That(result.Output, Contains.Substring(TestQueueName));
     }
-    
+
     [Test]
     public async Task ListTDLQMessageDetailsWhenMessagesExistsInTDLQ()
     {
         await CreateQueueWithTDLQMessage(TestQueueName);
-        var result = await ExecuteCommand($"queue {TestQueueName}");
+        var result = await ExecuteCommand("queue", TestQueueName);
 
         Assert.That(result.ExitCode, Is.Not.Zero);
         Assert.That(result.Output, Contains.Substring(TestQueueName));

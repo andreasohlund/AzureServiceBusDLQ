@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class MoveQueueCommand(QueueOperations queueOperations) : AsyncCommand<MoveQueueCommand.Settings>
+public class MoveQueueCommand(QueueOperations queueOperations, IAnsiConsole console) : AsyncCommand<MoveQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -29,7 +29,7 @@ public class MoveQueueCommand(QueueOperations queueOperations) : AsyncCommand<Mo
         await queueOperations.EnsureQueueExists(settings.TargetQueueName, cancellationToken);
 
 
-        await AnsiConsole.Progress()
+        await console.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
@@ -61,7 +61,7 @@ public class MoveQueueCommand(QueueOperations queueOperations) : AsyncCommand<Mo
 
                 progress.StopTask();
 
-                DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.DeadLetter, dlqMessages);
+                DisplayHelper.ShowDLQMessages(console, queue.Name, SubQueue.DeadLetter, dlqMessages);
             });
 
         return 0;
@@ -93,7 +93,7 @@ public class MoveQueueCommand(QueueOperations queueOperations) : AsyncCommand<Mo
             message.ApplicationProperties[NServiceBus.Headers.ProcessingMachine] = "unknown";
             message.ApplicationProperties[NServiceBus.Headers.ExceptionType] = dlqMessage.DeadLetterReason;
             message.ApplicationProperties[NServiceBus.Headers.Message] = dlqMessage.DeadLetterErrorDescription;
-            
+
             if (!message.ApplicationProperties.ContainsKey(NServiceBus.Headers.MessageId))
             {
                 message.ApplicationProperties[NServiceBus.Headers.MessageId] = message.MessageId;

@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class ShowQueueCommand(QueueOperations queueOperations) : AsyncCommand<ShowQueueCommand.Settings>
+public class ShowQueueCommand(QueueOperations queueOperations, IAnsiConsole console) : AsyncCommand<ShowQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -19,7 +19,7 @@ public class ShowQueueCommand(QueueOperations queueOperations) : AsyncCommand<Sh
 
         var dlqMessagesExists = false;
 
-        await AnsiConsole.Progress()
+        await console.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
@@ -32,7 +32,7 @@ public class ShowQueueCommand(QueueOperations queueOperations) : AsyncCommand<Sh
                 dlqMessagesExists = queue.DeadLetterMessageCount > 0 || queue.TransferDeadLetterMessageCount > 0;
                 if (!dlqMessagesExists)
                 {
-                    AnsiConsole.WriteLine($"No DLQ messages found in {queue.Name}");
+                    console.WriteLine($"No DLQ messages found in {queue.Name}");
                     return;
                 }
 
@@ -44,7 +44,7 @@ public class ShowQueueCommand(QueueOperations queueOperations) : AsyncCommand<Sh
 
                     dlqProgress.StopTask();
 
-                    DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.DeadLetter, dlqMessages);
+                    DisplayHelper.ShowDLQMessages(console, queue.Name, SubQueue.DeadLetter, dlqMessages);
                 }
 
                 if (queue.TransferDeadLetterMessageCount > 0)
@@ -55,7 +55,7 @@ public class ShowQueueCommand(QueueOperations queueOperations) : AsyncCommand<Sh
 
                     tDlqProgress.StopTask();
 
-                    DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.TransferDeadLetter, tDlqMessages);
+                    DisplayHelper.ShowDLQMessages(console, queue.Name, SubQueue.TransferDeadLetter, tDlqMessages);
                 }
             });
 

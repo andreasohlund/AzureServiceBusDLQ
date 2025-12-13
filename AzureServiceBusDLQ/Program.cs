@@ -27,7 +27,6 @@ public static class Program
             config.AddCommand<MoveQueueCommand>("move-dlq-messages");
             config.AddCommand<SubscriptionsStatusCommand>("subscriptions");
 #if DEBUG
-            config.PropagateExceptions();
             config.ValidateExamples();
 #endif
         });

@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class RetryQueueCommand(QueueOperations queueOperations) : AsyncCommand<RetryQueueCommand.Settings>
+public class RetryQueueCommand(QueueOperations queueOperations, IAnsiConsole console) : AsyncCommand<RetryQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -19,7 +19,7 @@ public class RetryQueueCommand(QueueOperations queueOperations) : AsyncCommand<R
 
         var queueName = settings.QueueName;
 
-        await AnsiConsole.Progress()
+        await console.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
@@ -31,7 +31,7 @@ public class RetryQueueCommand(QueueOperations queueOperations) : AsyncCommand<R
 
                 if (queue.DeadLetterMessageCount == 0)
                 {
-                    AnsiConsole.WriteLine($"No DLQ messages to retry found in {queueName}");
+                    console.WriteLine($"No DLQ messages to retry found in {queueName}");
                     return;
                 }
 
@@ -41,9 +41,9 @@ public class RetryQueueCommand(QueueOperations queueOperations) : AsyncCommand<R
 
                 progress.StopTask();
 
-                DisplayHelper.ShowDLQMessages(queue.Name, SubQueue.DeadLetter, dlqMessages);
+                DisplayHelper.ShowDLQMessages(console, queue.Name, SubQueue.DeadLetter, dlqMessages);
             });
-        
+
         return 0;
     }
 }

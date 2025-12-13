@@ -3,7 +3,7 @@ using Spectre.Console;
 
 static class DisplayHelper
 {
-    public static void ShowDLQMessages(string queueName, SubQueue subQueue, List<ServiceBusReceivedMessage> messages)
+    public static void ShowDLQMessages(IAnsiConsole console, string queueName, SubQueue subQueue, List<ServiceBusReceivedMessage> messages)
     {
         if (subQueue == SubQueue.None)
         {
@@ -27,6 +27,6 @@ static class DisplayHelper
             queueTable.AddRow(message.MessageId, message.DeadLetterReason ?? "", message.DeadLetterErrorDescription ?? "", message.DeadLetterSource ?? "");
         }
 
-        AnsiConsole.Write(queueTable);
+        console.Write(queueTable);
     }
 }

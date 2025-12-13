@@ -4,11 +4,11 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class SubscriptionsStatusCommand(ServiceBusAdministrationClient administrationClient) : AsyncCommand<BaseSettings>
+public class SubscriptionsStatusCommand(ServiceBusAdministrationClient administrationClient, IAnsiConsole console) : AsyncCommand<BaseSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, BaseSettings settings, CancellationToken cancellationToken)
     {
-        await AnsiConsole.Progress()
+        await console.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
@@ -31,7 +31,7 @@ public class SubscriptionsStatusCommand(ServiceBusAdministrationClient administr
                     subscriptionTable.AddRow(subscription.SubscriptionName, subscription.DeadLetterMessageCount.ToString(), subscription.TransferDeadLetterMessageCount.ToString());
                 }
 
-                AnsiConsole.Write(subscriptionTable);
+                console.Write(subscriptionTable);
             });
 
 
