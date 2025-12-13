@@ -2,14 +2,9 @@ using Spectre.Console.Cli;
 
 public sealed class TypeResolver(IServiceProvider provider) : ITypeResolver, IAsyncDisposable, IDisposable
 {
-    public object Resolve(Type type)
+    public object? Resolve(Type? type)
     {
-        if (type == null)
-        {
-            return null;
-        }
-
-        return provider.GetService(type);
+        return type == null ? null : provider.GetService(type);
     }
 
     public void Dispose()

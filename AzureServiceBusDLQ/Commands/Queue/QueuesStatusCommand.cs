@@ -2,9 +2,9 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class QueuesStatusCommand(ServiceBusAdministrationClient administrationClient) : CancellableAsyncCommand<BaseSettings>
+public class QueuesStatusCommand(ServiceBusAdministrationClient administrationClient) : AsyncCommand<BaseSettings>
 {
-    protected override async Task<int> ExecuteAsync(CommandContext context, BaseSettings settings, CancellationToken cancellationToken)
+    public override async Task<int> ExecuteAsync(CommandContext context, BaseSettings settings, CancellationToken cancellationToken)
     {
         var dlqMessagesExists = false;
 

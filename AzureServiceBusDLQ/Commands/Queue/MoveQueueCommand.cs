@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class MoveQueueCommand(QueueOperations queueOperations) : CancellableAsyncCommand<MoveQueueCommand.Settings>
+public class MoveQueueCommand(QueueOperations queueOperations) : AsyncCommand<MoveQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -21,7 +21,7 @@ public class MoveQueueCommand(QueueOperations queueOperations) : CancellableAsyn
         public string? Transformation { get; set; }
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         var queueName = settings.QueueName;
 

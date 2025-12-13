@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsyncCommand<RetryQueueCommand.Settings>
+public class RetryQueueCommand(QueueOperations queueOperations) : AsyncCommand<RetryQueueCommand.Settings>
 {
     public class Settings : BaseSettings
     {
@@ -13,7 +13,7 @@ public class RetryQueueCommand(QueueOperations queueOperations) : CancellableAsy
         public string QueueName { get; set; } = null!;
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
+    public override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
         await queueOperations.EnsureQueueExists(settings.QueueName, cancellationToken);
 

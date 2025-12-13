@@ -7,8 +7,8 @@ using NUnit.Framework;
 public class CommandTestFixture
 {
     protected static readonly string ConnectionString = Environment.GetEnvironmentVariable("AzureServiceBusDLQ_ConnectionString")!;
-    protected ServiceBusAdministrationClient AdministrationClient;
-    protected ServiceBusClient ServiceBusClient;
+    ServiceBusAdministrationClient AdministrationClient = null!;
+    protected ServiceBusClient ServiceBusClient = null!;
     protected CancellationToken TestTimeoutCancellationToken => testCancellationTokenSource.Token;
     protected string TestQueueName => $"{TestQueueNamePrefix}-{TestContext.CurrentContext.Test.ID}";
 
@@ -170,7 +170,7 @@ public class CommandTestFixture
         }
     }
     
-    CancellationTokenSource testCancellationTokenSource;
+    CancellationTokenSource testCancellationTokenSource = null!;
 
     const string TestQueueNamePrefix = "asq-dlq-test";
     static readonly TimeSpan TestTimeout = TimeSpan.FromSeconds(10);
