@@ -2,13 +2,13 @@ using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
-public class QueuesStatusCommand(ServiceBusAdministrationClient administrationClient) : AsyncCommand<BaseSettings>
+public class QueuesStatusCommand(ServiceBusAdministrationClient administrationClient, IAnsiConsole console) : AsyncCommand<BaseSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, BaseSettings settings, CancellationToken cancellationToken)
     {
         var dlqMessagesExists = false;
 
-        await AnsiConsole.Progress()
+        await console.Progress()
             .Columns(new TaskDescriptionColumn(), new SpinnerColumn())
             .HideCompleted(true)
             .StartAsync(async ctx =>
@@ -23,7 +23,7 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
                 dlqMessagesExists = queuesWithDLQMessages.Any();
                 if (!dlqMessagesExists)
                 {
-                    AnsiConsole.WriteLine($"No DLQ messages found in {queues.Count} queues");
+                    console.WriteLine($"No DLQ messages found in {queues.Count} queues");
                     return;
                 }
 
@@ -41,7 +41,7 @@ public class QueuesStatusCommand(ServiceBusAdministrationClient administrationCl
                     queueTable.AddRow(queue.Name, queue.DeadLetterMessageCount.ToString(), queue.TransferDeadLetterMessageCount.ToString());
                 }
 
-                AnsiConsole.Write(queueTable);
+                console.Write(queueTable);
             });
 
 

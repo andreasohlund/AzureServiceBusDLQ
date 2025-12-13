@@ -3,6 +3,7 @@ using System.Transactions;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 using NUnit.Framework;
+using Spectre.Console;
 
 public class CommandTestFixture
 {
@@ -23,7 +24,7 @@ public class CommandTestFixture
                 .Replace("/", "");
         }
     }
-    
+
     [SetUp]
     public async Task Setup()
     {
@@ -43,35 +44,28 @@ public class CommandTestFixture
 
     protected async Task<CommandResult> ExecuteCommand(string command, string? connectionOptions = null)
     {
-        connectionOptions ??= "-c " + ConnectionString;
+        var output = new StringWriter();
 
-        var process = new Process();
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-        process.StartInfo.WorkingDirectory = TestContext.CurrentContext.TestDirectory;
-        process.StartInfo.FileName = "dotnet";
-        process.StartInfo.Arguments = $"AzureServiceBusDLQ.dll {command} {connectionOptions}";
-
-        process.Start();
-        var outputTask = process.StandardOutput.ReadToEndAsync(TestTimeoutCancellationToken);
-        var errorTask = process.StandardError.ReadToEndAsync(TestTimeoutCancellationToken);
-
-        await process.WaitForExitAsync(TestTimeoutCancellationToken);
-
-        var output = await outputTask.WaitAsync(TestTimeoutCancellationToken);
-        var error = await errorTask.WaitAsync(TestTimeoutCancellationToken);
-
-        if (output != string.Empty)
+        var console = AnsiConsole.Create(new AnsiConsoleSettings
         {
-            TestContext.WriteLine(output);
+            Out = new AnsiConsoleOutput(output),
+            Ansi = AnsiSupport.No
+        });
+
+        var args = new List<string> { command };
+
+        if (connectionOptions != null)
+        {
+            args.Add(connectionOptions);
+        }
+        else
+        {
+            args.Add("-c");
+            args.Add(ConnectionString);
         }
 
-        if (error != string.Empty)
-        {
-            TestContext.WriteLine(error);
-        }
-
-        return new CommandResult(process.ExitCode, output, error);
+        var exitCode = await Program.Run(args.ToArray(), console);
+        return new CommandResult(exitCode, output.ToString(), "");
     }
 
     protected async Task<string> ExecuteCommandAndExpectSuccess(string command, string? connectionOptions = null)
@@ -99,11 +93,11 @@ public class CommandTestFixture
 
         await AddDLQMessage(queueName, message);
     }
-    
+
     protected async Task AddDLQMessage(string queueName, ServiceBusMessage? message = null)
     {
         await using var sender = ServiceBusClient.CreateSender(queueName);
-        
+
         message ??= new ServiceBusMessage(BinaryData.FromObjectAsJson(new { MyProperty = "Some value" }));
 
         await sender.SendMessageAsync(message, TestTimeoutCancellationToken);
@@ -129,14 +123,14 @@ public class CommandTestFixture
         {
             EnableCrossEntityTransactions = true
         });
-        
+
         await using var receiver = transactionalClient.CreateReceiver(queueName);
         await using var sendViaSender = transactionalClient.CreateSender(targetQueueName);
 
         var message = await receiver.ReceiveMessageAsync(cancellationToken: TestTimeoutCancellationToken);
 
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-        
+
         await sendViaSender.SendMessageAsync(new ServiceBusMessage(), TestTimeoutCancellationToken);
 
         QueueProperties targetQueueProperties = await AdministrationClient.GetQueueAsync(targetQueueName, TestTimeoutCancellationToken);
@@ -144,7 +138,7 @@ public class CommandTestFixture
         await AdministrationClient.UpdateQueueAsync(targetQueueProperties, TestTimeoutCancellationToken);
 
         await receiver.CompleteMessageAsync(message, TestTimeoutCancellationToken);
-       
+
         scope.Complete();
     }
 
@@ -158,7 +152,7 @@ public class CommandTestFixture
         {
         }
     }
-    
+
     protected async Task ClearAllTestQueues()
     {
         await foreach (var queue in AdministrationClient.GetQueuesRuntimePropertiesAsync(TestTimeoutCancellationToken))
@@ -169,7 +163,7 @@ public class CommandTestFixture
             }
         }
     }
-    
+
     CancellationTokenSource testCancellationTokenSource = null!;
 
     const string TestQueueNamePrefix = "asq-dlq-test";
