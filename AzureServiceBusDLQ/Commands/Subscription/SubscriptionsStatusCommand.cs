@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using Azure.Identity;
 using Azure.Messaging.ServiceBus.Administration;
 using Spectre.Console;
 using Spectre.Console.Cli;

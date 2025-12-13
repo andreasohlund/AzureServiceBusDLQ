@@ -7,7 +7,7 @@
 ## Connecting
 
 > [!NOTE]  
-> [Listen claims](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization) is required.
+> [Listen claims](https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization) are required.
 
 Connecting to the azure service bus namespace can be done in two ways:
 
