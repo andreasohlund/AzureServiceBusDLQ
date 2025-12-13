@@ -1,1 +1,1 @@
-public record CommandResult(int ExitCode, string Output, string Error);
+public record CommandResult(int ExitCode, string Output);

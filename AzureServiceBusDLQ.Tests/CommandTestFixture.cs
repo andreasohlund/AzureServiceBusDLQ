@@ -42,7 +42,18 @@ public class CommandTestFixture
         testCancellationTokenSource?.Dispose();
     }
 
-    protected async Task<CommandResult> ExecuteCommand(string command, string? connectionOptions = null)
+    protected Task<CommandResult> ExecuteCommand(params string[] args)
+    {
+        var arguments = new List<string>(args)
+        {
+            "-c",
+            ConnectionString
+        };
+
+        return ExecuteCommandWithoutDefaultConnection(arguments.ToArray());
+    }
+
+    protected async Task<CommandResult> ExecuteCommandWithoutDefaultConnection(params string[] args)
     {
         var output = new StringWriter();
 
@@ -51,34 +62,9 @@ public class CommandTestFixture
             Out = new AnsiConsoleOutput(output),
             Ansi = AnsiSupport.No
         });
-
-        var args = new List<string> { command };
-
-        if (connectionOptions != null)
-        {
-            args.Add(connectionOptions);
-        }
-        else
-        {
-            args.Add("-c");
-            args.Add(ConnectionString);
-        }
-
-        var exitCode = await Program.Run(args.ToArray(), console);
-        return new CommandResult(exitCode, output.ToString(), "");
-    }
-
-    protected async Task<string> ExecuteCommandAndExpectSuccess(string command, string? connectionOptions = null)
-    {
-        var result = await ExecuteCommand(command, connectionOptions);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(result.ExitCode, Is.EqualTo(0));
-            Assert.That(result.Error, Is.EqualTo(string.Empty));
-        });
-
-        return result.Output;
+        
+        var exitCode = await Program.Run(args, console);
+        return new CommandResult(exitCode, output.ToString());
     }
 
     protected async Task CreateQueue(string queueName)
