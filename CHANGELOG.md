@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Support for .net10
+
 ## 1.0.2
 
 - Set NServiceBus.ProcessingMachine to `unknown` when NServiceBus transformation is used
